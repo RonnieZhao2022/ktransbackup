@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加HS Code条目</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<body>
+
+
+
+         {% for message in get_flashed_messages() %}
+            <div class="container alert "><h3>{{ message }}</h3></div>
+        {% endfor %}
+
+
+
+
+    <div class = "container p-2 mx-auto" >
+
+        <a href="https://ktrans.pythonanywhere.com/static/files/LVS/LVS-EDI.txt" target = "_blank">文件预览</a>
+
+        <a href="/LVS-EDI-DOWNLOAD/" target = "_blank">文件下载</a>
+
+    </div>
+
+
+
+    <div class = "container p-2 mx-auto" >
+
+        <h3 class="text-conter">添加HS Code条目</h3>
+
+    </div>
+
+
+
+
+<div class = "container"  >
+
+
+
+        <form action = '/addHSitems/' method="post"  enctype="multipart/form-data">
+
+
+
+
+<div class = "mb-3">
+
+                <h3 class = "text-primary m-5"><strong>新HS Code条目录入</strong></h3>
+
+            </div>
+
+
+
+            <div class = "mb-3">
+
+                    <label for="Item_Quantity_" class="form-label">Item Quantity *(必填)Line item quantity.  </label>
+
+                    <input type="text"  class="form-control" required  id="Item_Quantity_" name = "Item_Quantity_"  placeholder = "请输入最多9位数字" pattern = "\d{0,9}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Item_Quantity_Unit_of_Measure" class="form-label">Item Quantity Unit of Measure*(必填)Line Item quantity unit of measure.  Eg. PCS, NMB</label>
+
+                    <input type="text"  class="form-control" required  id="Item_Quantity_Unit_of_Measure" name = "Item_Quantity_Unit_of_Measure"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Unit_Price" class="form-label">Unit Price*(必填)Unit price for line item.</label>
+
+                    <input type="text"  class="form-control" required  id="Unit_Price" name = "Unit_Price"  placeholder = "请输入最多14位数字" pattern = "[0-9\.]{0,14}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Country_of_Origin" class="form-label">Country of Origin*(必填)Origin code of line item. Eg. UFL, IT, MX</label>
+
+                    <input type="text"  class="form-control" required  id="Country_of_Origin" name = "Country_of_Origin"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Number" class="form-label">Part Number*(必填)Unique line item identifier.</label>
+
+                    <input type="text"  class="form-control" required  id="Part_Number" name = "Part_Number"  placeholder = "请输入最多25位字母或数字" pattern = "[0-9a-zA-Z]{0,25}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Description_1" class="form-label">Part Description 1*(必填)Goods description of line item being shipped.</label>
+
+                    <input type="text"  class="form-control" required  id="Part_Description_1" name = "Part_Description_1"  placeholder = "请输入最多30位字母或数字" pattern = "[0-9a-zA-Z\s]{0,30}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Description_2" class="form-label">Part Description 2*(选填)Additional description of line item.</label>
+
+                    <input type="text"  class="form-control"   id="Part_Description_2" name = "Part_Description_2"  placeholder = "请输入最多30位字母或数字" pattern = "[0-9a-zA-Z]{0,30}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Description_3" class="form-label">Part Description 3*(选填)Additional description of line item.</label>
+
+                    <input type="text"  class="form-control"   id="Part_Description_3" name = "Part_Description_3"  placeholder = "请输入最多20位字母或数字" pattern = "[0-9a-zA-Z]{0,20}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="HS_Classification_Number_for_Line_Item" class="form-label">HS Classification Number for Line Item*(必填)10 - digit Canadian Harmonized System Classification Number.</label>
+
+                    <input type="text"  class="form-control" required  id="HS_Classification_Number_for_Line_Item" name = "HS_Classification_Number_for_Line_Item"  placeholder = "请输入最多10位数字" pattern = "\d{0,10}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Tariff_Qty" class="form-label">Tariff Qty*(选填)Tariff quantity from Customs Tariff.</label>
+
+                    <input type="text"  class="form-control"   id="Tariff_Qty" name = "Tariff_Qty"  placeholder = "请输入最多14位数字" pattern = "\d{0,14}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Tariff_UOM" class="form-label">Tariff UOM*(选填)Tariff unit of measure from Customs Tariff.</label>
+
+                    <input type="text"  class="form-control"   id="Tariff_UOM" name = "Tariff_UOM"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Extended_Price" class="form-label">Extended Price*(选填)Total value of line item.</label>
+
+                    <input type="text"  class="form-control"   id="Extended_Price" name = "Extended_Price"  placeholder = "请输入最多14位数字" pattern = "\d{0,14}" >
+    </div>
+
+
+
+
+
+
+
+                <button  type="submit" class="btn btn-primary">提交表单</button>
+
+                <button  type="submit" class="btn btn-primary">新增条目</button>
+
+                <button   class="btn btn-primary"><a href="/lvsInput/add/" style = "text-decoration: none; color : #fff">在此票中添加新单</a></button>
+
+
+
+
+        </form>
+
+</div>
+
+
+</body>
+</html>

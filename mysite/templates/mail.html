@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ID}}{{ActionItems}}邮件</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    <!-- <script  src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <script  src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js.map"></script> -->
+
+    <script  src="/static/js/showdownjs/showdown.min.js"></script>
+    <script  src="/static/js/showdownjs/showdown.min.js.map"></script>
+
+
+
+</head>
+
+<body>
+
+
+        <div class="container mt-3 bg-light text-dark" style = "padding-top:10px;padding-left:30px;padding-right:30px" >
+
+            <h2 class="text-center" style = "margin-top:50px">KTRANS 邮件自动生成系统</h2>
+            <h3 class="text-center" style = "margin-top:30px">货单{{ID}}   {{ActionItems}}</h3>
+
+
+        	<form  >
+
+
+                <label  class="form-label">收件方及抄送邮箱地址</label>
+
+                {%  for receiver in receiverList %}
+
+                    <div class="form-check mb-3" style = "margin-top:20px">
+                        <input class="form-check-input" type="checkbox"  name="receiverEmail[]" value={{receiver}} checked>
+                        <label class="form-check-label">{{receiver}} </label>
+                    </div>
+
+                {% endfor  %}
+
+
+
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="tor2Email" name="tor2Email" value="tor2@ktranslogistics.com" checked>
+                  <label class="form-check-label">tor2@ktranslogistics.com</label>
+                </div>
+
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="kathieEmail" name="kathieEmail" value="kathie@ktranslogistics.com" checked>
+                  <label class="form-check-label">kathie@ktranslogistics.com</label>
+                </div>
+
+
+
+        	  <div class="mb-3" style = "margin-top:40px">
+        		<label for="subtitle" class="form-label">邮件标题</label>
+        		<input type="text" class="form-control" id="subtitle" name ="subtitle"  value="{{subtitle}}" name="subtitle">
+        	  </div>
+
+
+        	  <div class="mb-3" style = "margin-top:20px">
+        	        <div class = "row">
+        	            <div class = "col">
+        	                邮件内容
+
+
+        		            <textarea class="form-control" style = "padding-top:30px"    name="content" rows="10" id="content" >{{content}}</textarea>
+        		            <button type="submit" class="btn btn-primary mt-3" >发送</button>
+        	            </div>
+
+        	            <div class = "col">
+        	                正文预览
+
+
+        		            <div  class = "container-fluid border border-success" style = "overflow:auto;">
+        		                <div  style="height: 275px;" class = "py-5 pb-5" >
+        		                    <p  id = "editPreview"></p>
+
+
+        		                </div>
+
+        		            </div>
+
+        	            </div>
+        	        </div>
+        	  </div>
+
+
+
+
+        	</form>
+        	<script>
+
+        	window.addEventListener("load", function(event) {
+
+
+              var textarea = document.getElementById("content");
+              var text = textarea.value;
+              var converter = new showdown.Converter();
+                    html = converter.makeHtml(text);
+
+              document.getElementById('editPreview').innerHTML =html;
+
+              });
+
+
+        	document.getElementById("content").addEventListener("change", function(event) {
+
+
+              var textarea = document.getElementById("content");
+              var text = textarea.value;
+              var converter = new showdown.Converter();
+                    html = converter.makeHtml(text);
+
+              document.getElementById('editPreview').innerHTML =html;
+
+              });
+
+
+
+
+            </script>
+
+</div>
+
+<!--
+<div class = "container"  >
+    <h4>本票货物相关文件如下，点击即可打开查看</h4>
+
+
+    <ul class="list-group">
+
+        {% for i in fileList %}
+
+
+
+            <a href="/static/files/{{operator}}/{{ID}}/{{i}}" target = "_blank">{{i}}</a>
+
+
+        {% endfor %}
+
+    </ul>
+
+
+</div>
+
+<div class = "container" >
+    <form action = "/success/{{operator}}/{{ID}}/" method = "POST"    enctype = "multipart/form-data">
+              <label for="file" class="form-label">请选择上传文件</label>
+              <input type = "file" name = "file" />
+              <input type = "submit" value="上传"/>
+            </form>
+</div>  -->
+
+
+
+
+
+
+</body>
+</html>

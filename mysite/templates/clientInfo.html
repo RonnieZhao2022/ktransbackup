@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>新客户登记</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<body>
+
+    <div class = "container p-2 mx-auto" >
+
+        <h3 class="text-conter">新客户登记</h3>
+
+
+    </div>
+
+
+
+
+<div class = "container mb-5"  >
+
+
+
+        <form method="post"  enctype="multipart/form-data">
+
+             <div class="shadow-lg p-3 mb-5 bg-white rounded">
+
+                <div class="form-row">
+
+
+
+
+
+                    <!--标注紧急事项  -->
+                    <div class="form-group">
+                        <label for="remark" class="form-label">紧急事项</label>
+                        <textarea class="form-control" id="remark" name = "remark"  rows="3" ></textarea>
+                    </div>
+
+                </div>
+
+
+
+
+             <div class="shadow-lg p-3 mb-5 bg-white rounded">
+                <div class="form-row">
+
+
+
+
+
+
+                </div>
+
+
+
+                <div class="form-row">
+
+
+                    <!--标注联系人  -->
+                    <div class="form-group col-md-3">
+                        <label for="contact" class="form-label">联系人</label>
+                        <input type="text" class="form-control" id="contact" name = "contact" >
+                    </div>
+
+                    <!--标注公司名称  -->
+                    <div class="form-group col-md-3">
+                        <label for="company" class="form-label">公司名称</label>
+                        <input type="text" class="form-control" id="company" name = "company" >
+                    </div>
+
+                    <!--标注收货人电话  -->
+                     <div class="form-group col-md-3">
+                        <label for="phone" class="form-label">收货人电话</label>
+                        <input type="text" class="form-control" id="phone"  name = "phone" >
+                    </div>
+
+                </div>
+
+
+
+
+
+                <div class="form-row">
+
+
+
+                    <!--标注收货人电邮  -->
+                    <div class="form-group col-md-6">
+                        <label for="email" class="form-label">收货人电邮</label>
+                        <input type="text" class="form-control" id="email" name = "email" >
+                    </div>
+
+
+                    <!--标注所在城市  -->
+                    <div class="form-group col-md-3">
+                          <label for="city" class="form-label">所在城市</label>
+                          <input list ="city" id="city" name = "city"   class="form-control" required>
+                          <datalist id="dest_cityList">
+                            {% for i in dest_cityList %}
+                                    <option value = "{{i[0]}}"></option>
+                            {% endfor %}
+
+                          </datalist>
+
+                    </div>
+
+
+                    <!--标注起运港  -->
+                    <div class="form-group col-md-3">
+                          <label for="port_of_loading" class="form-label">起运港</label>
+                          <input list ="city" id="port_of_loading" name = "port_of_loading"   class="form-control" required>
+                          <datalist id="dest_cityList">
+                            {% for i in dest_cityList %}
+                                    <option value = "{{i[0]}}"></option>
+                            {% endfor %}
+
+                          </datalist>
+
+                    </div>
+
+
+
+                    <!--标注从事领域  -->
+                    <div class="form-group col-md-3">
+                          <label for="field" class="form-label">从事领域</label>
+                          <select id="field"  name = "shipping_type"  class="form-control">
+
+                                <option selected></option>
+                                <option >LCL</option>
+                                <option >FCL</option>
+                           	    <option >BOTH</option>
+
+
+                          </select>
+                    </div>
+
+
+
+                </div>
+
+            </div>
+
+
+
+            <!--标注货运种类  -->
+                    <div class="form-group col-md-3">
+                          <label for="shipping_type" class="form-label">货运种类</label>
+                          <select id="shipping_type"  name = "shipping_type"  class="form-control">
+
+                                <option selected></option>
+                                <option >LCL</option>
+                                <option >FCL</option>
+                           	    <option >BOTH</option>
+
+
+                          </select>
+                    </div>
+
+
+
+              <button type="submit" class="btn btn-primary">提交</button>
+
+
+        </form>
+
+
+
+</div>
+
+
+</body>
+</html>

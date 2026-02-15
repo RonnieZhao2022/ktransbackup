@@ -1,0 +1,30 @@
+weather API
+openweathermap.org
+username: Ronnie
+Key:1aef85a4b73f8d3bceb1243b3088947c
+
+mysql 数据库
+
+website username: zhaoyue20131023@gmail.com
+password: ronnie6477021238
+
+bitbucket push mima:ATBBSSU54W9byWn7xQmWnrvQtvGYF105BDCA
+
+Database host address:KTRANS.mysql.pythonanywhere-services.com
+Username:KTRANS
+Password: ktrans6477021238
+
+
+MS TEAMS
+
+USER tor2@ktranslogistics.com
+MIMA: Ktrans2024
+
+
+
+备份数据库
+mysqldump -u KTRANS \
+-h KTRANS.mysql.pythonanywhere-services.com \
+--no-tablespaces \
+--column-statistics=0 \
+'KTRANS$ktrans' > backup_default.sql

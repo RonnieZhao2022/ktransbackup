@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>国内询价记录局部修改</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<body>
+
+    {% for message in get_flashed_messages() %}
+            <div class="container alert "><h2>{{ message }}</h2></div>
+    {% endfor %}
+
+    <div class = "container p-2 mx-auto" >
+
+        <h3 class="text-conter">{{ID}}局部修改</h3>
+
+    </div>
+
+
+
+
+<div class = "container"  >
+
+
+
+        <form method="post"  enctype="multipart/form-data">
+
+                <div class="form-row ">
+
+
+
+                    <!--标注运费底价 -->
+                    <div class="form-group col-md-3">
+                        <label for="basePrice" class="form-label">运费底价</label>
+                        <input type="number" class="form-control" id="basePrice" name = "basePrice" value = "{{basePrice}}" patten = "[0-9]{0-5}" placeholder = "只限数字" >
+                    </div>
+
+
+                    <!--标注运费报价  -->
+                    <div class="form-group col-md-3">
+                        <label for="price" class="form-label">运费报价</label>
+                        <input type="number" class="form-control" id="price" name = "price" value = "{{price}}" patten = "[0-9]{0-5}" placeholder = "只限数字">
+                    </div>
+
+
+                    <!--标注成交日期  -->
+                    <div class="form-group col-md-3">
+                        <label for="dealDate" class="form-label">成交日期</label>
+                        <input type="date" class="form-control" id="dealDate" name = "dealDate"   value = "{{dealDate}}">
+                    </div>
+
+                </div>
+
+
+                <div class="form-row ">
+
+
+                    <!--标注备注  -->
+                    <div class="form-group container">
+                        <label for="remark" class="form-label">备注:</label>
+                        <textarea class="form-control" id="remark" name = "remark"  rows="3"  >{{remark}}</textarea>
+                    </div>
+
+
+
+
+                </div>
+
+
+
+
+
+                <button type="submit" class="btn btn-primary">提交</button>
+
+
+
+
+
+
+        </form>
+
+</div>
+
+
+</body>
+</html>
