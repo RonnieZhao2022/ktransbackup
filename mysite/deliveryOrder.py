@@ -1,41 +1,33 @@
 #!/usr/bin/env python
-import sqlite3
+
 import tools
 
 import os
 import time
+from copy import deepcopy
 
 from docx import Document
 
-def connectDB(sql):
-    conn = sqlite3.connect("/home/KTRANS/mysite/KTRANS.db")
-    cur = conn.cursor()
-    cur.execute(sql)
-    cur = conn.cursor()
-    cur.execute(sql)
-    myresultTuple = cur.fetchone()
-    myresult=list(myresultTuple)
-    cur.close()
-    conn.commit()
-    conn.close()
-    return myresult
 
 
 def deliveryorder(ID):
-
-    DO = Document('/home/KTRANS/mysite/static/Delivery_Order_Template.docx')
 
 
     sql = "SELECT order_id, ccn ,client , Orders.phone,cargo_type , Warehouse.company , Warehouse.address,   Orders.address ,amount , weight,volume,delivery_type, User.name \
            FROM Orders JOIN Warehouse ON Warehouse.warehouse_id = Orders.warehouse  JOIN User ON User.user_id = Orders.operator WHERE order_id = '%s' " % ID
 
-    results = tools.queryMysql(sql)[0]
+    results = tools.queryMysql(sql)
+    if not results:
+        return "没有相关数据，请核准单号之后，再进行相关操作！"
+
     result = []
-    for item in results:
+    for item in results[0]:
         if item:
             result.append(item)
         else:
             result.append('')
+
+    DO = Document('/home/KTRANS/mysite/static/Delivery_Order_Template.docx')
 
 
     filename = DO.tables[0].cell(0,0).paragraphs[0]
@@ -63,4 +55,59 @@ def deliveryorder(ID):
 
 
     DO.save('/home/KTRANS/mysite/static/files/deliveryOrder/Delivery_Order_%s.docx'%(ID))
+
+
+def FBA_deliveryorder(warehouse, cargo_id, pallets, date, cargo_list):
+    """生成 FBA Delivery Order Word 文档，安全处理空单元格和多行填充"""
+
+
+    # 打开模板
+    DO = Document('/home/KTRANS/mysite/static/FBA_deliveryorder_Template.docx')
+
+    # 获取仓库地址
+    sql = "SELECT address FROM FBA WHERE name = '%s'" % warehouse
+
+    address_tuple = tools.queryMysql(sql)[0]  # 可能是 ('123 Street, City',)
+    address = str(address_tuple[0])
+
+    DO.tables[0].cell(1,0).add_paragraph(warehouse + ' ' + address)
+    DO.tables[0].cell(1,1).add_paragraph(warehouse)
+    DO.tables[0].cell(1,3).add_paragraph(pallets)
+
+
+    # 填充表格1
+    table = DO.tables[1]
+    template_row = table.rows[1]
+
+    # 删除多余行，保留模板行
+    while len(table.rows) > 1:
+        table._tbl.remove(table.rows[1]._tr)
+
+    for data in cargo_list:
+        new_row = deepcopy(template_row._tr)
+        table._tbl.append(new_row)
+        cells = table.rows[-1].cells
+
+        for i, value in enumerate(data):
+            cell = cells[i]
+
+            para = cell.paragraphs[0]  # 直接取模板行的第一个段落
+            if not para.runs:
+                para.add_run()
+            para.runs[0].text = str(value)
+
+            # 清空多余 run
+            for run in para.runs[1:]:
+                run.text = ""
+
+            # 删除其他多余段落
+            for p in cell.paragraphs[1:]:
+                p.clear()  # 或者 cell._element.remove(p._p)
+
+
+    # 保存文档
+    filename = '/home/KTRANS/mysite/static/files/FBA/%s--%s-RonnieFile%spallets%s.docx' % (
+        warehouse, cargo_id, pallets, date
+    )
+    DO.save(filename)
 

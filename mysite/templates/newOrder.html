@@ -49,13 +49,13 @@
 
 
                     </div>
-                     <!--
+
                      <div class="form-group col-md-3">
                         <label for="operator"  class="form-label">operator</label>
 
                         <select id="operator" name = "operator"  class="form-control">
 
-                                <option selected></option>
+                                <option selected value = "4">tor3</option>
                                 {% for i in operatorList %}
                                     <option value = "{{i[0]}}">{{i[1]}}</option>
                                 {% endfor %}
@@ -64,19 +64,19 @@
                         </select>
 
 
-                    </div> -->
+                    </div>
 
-                    <!--标注进口或出口
+                    <!--标注进口或出口  -->
                     <div class="form-group col-md-3">
                           <label for="import_or_export" class="form-label">进口或出口</label>
                           <select id="import_or_export" name = "import_or_export" class="form-control">
-                                <option selected></option>
+                                <option selected>import</option>
                                 <option >import</option>
                                 <option >export</option>
                           </select>
 
 
-                    </div>-->
+                    </div>
 
                 </div>
 
@@ -335,7 +335,7 @@
                     <div class="form-group col-md-3">
                           <label for="dest_country" class="form-label">目的地国家(*必填*)</label>
                           <select id="dest_country" name = "dest_country" required  class="form-control">
-                                <option selected></option>
+                                <option selected>CANADA</option>
                                 <option >CANADA</option>
                                 <option >USA</option>
                                 <option >CHINA</option>
@@ -350,7 +350,7 @@
                     <!--标注目的地  -->
                     <div class="form-group col-md-3">
                           <label for="dest_city" class="form-label">目的地</label>
-                          <input list ="dest_cityList" id="dest_city" name = "dest_city"   class="form-control" required>
+                          <input list ="dest_cityList" id="dest_city" name = "dest_city"   class="form-control" required value = "TORONTO">
                           <datalist id="dest_cityList">
                             {% for i in dest_cityList %}
                                     <option value = "{{i[0]}}"></option>

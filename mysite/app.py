@@ -48,6 +48,8 @@ from os import path
 
 import datetime
 
+import excelreader
+
 
 
 
@@ -298,7 +300,7 @@ def railstatus(terminal):
         operatorid = current_user.id
         condition = f"and operator = {operatorid}"
 
-    sql = f"select `order_id`,`hold`,`container_number`,`train_company`,`eta`,`status`, Warehouse.company , Warehouse.website , `dest_city` from Orders JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where (status ='IN PORT' or status =  'ON RAIL' or status =  'AT SEA') and (train_company = '{terminal}' or train_company = '未知')  {condition} ORDER BY container_number ASC"
+    sql = f"select `order_id`,`hold`,`container_number`,`train_company`,CASE  WHEN LEFT(eta, 1) = '2' THEN SUBSTRING(eta, 6) ELSE eta   END AS eta_safe,`status`, Warehouse.company , Warehouse.website , `dest_city`,Orders.address from Orders JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where (status ='IN PORT' or status =  'ON RAIL' or status =  'AT SEA') and (train_company = '{terminal}' or train_company = '未知')  {condition} ORDER BY container_number ASC"
 
     myresult = tools.queryMysql(sql)
 
@@ -383,7 +385,7 @@ def newOrder():
         delivery_type = request.form.get('delivery_type')
         ccn = request.form.get('ccn')
         old_ccn = request.form.get('old_ccn')
-        LFDWarehouse = ""
+
         warehouse = request.form.get('warehouse')
         warehouse = int(warehouse)
         onboard_date = request.form.get('onboard_date')
@@ -461,6 +463,8 @@ def change(ID):
     sql = f"select * from Orders where order_id = '{ID}'"
 
     myresult = tools.queryMysql(sql)
+    if not myresult:
+         return "系统中没有此票记录，请重新核实！"
 
 
 
@@ -478,17 +482,14 @@ def change(ID):
 
 
         order_id = request.form.get('order_id')
-        operator = request.form.get('operator')
-        operator = int(operator)
+
+        operator = int(request.form.get('operator'))
         regular_client = request.form.get('regular_client')
         import_or_export = request.form.get('import_or_export')
 
-
-        remark = request.form.get('remark')
-        remark = remark.replace("'","")
+        remark = request.form.get('remark') or ""
         create_date = request.form.get('create_date')
         hold = request.form.get('hold')
-
 
         shipping_type = request.form.get('shipping_type')
         service_type = request.form.get('service_type')
@@ -499,86 +500,165 @@ def change(ID):
         ssl_info = request.form.get('ssl_info')
         vessel_name = request.form.get('vessel_name')
         cargo_type = request.form.get('cargo_type')
-        amount = request.form.get('amount').strip()
-        weight = request.form.get('weight').strip()
-        volume = request.form.get('volume').strip()
-        size = request.form.get('size').strip()
 
+        amount = (request.form.get('amount') or "").strip()
+        weight = (request.form.get('weight') or "").strip()
+        volume = (request.form.get('volume') or "").strip()
+        size = (request.form.get('size') or "").strip()
 
         train_company = request.form.get('train_company')
-        origin_city = request.form.get('origin_city')
-        origin_city = origin_city.strip()
-        origin_city = origin_city.upper()
 
-
+        origin_city = (request.form.get('origin_city') or "").strip().upper()
         dest_country = request.form.get('dest_country')
-        dest_city = request.form.get('dest_city').strip()
-        dest_city = dest_city.upper()
+        dest_city = (request.form.get('dest_city') or "").strip().upper()
+
         eta = request.form.get('eta')
 
-        broker = request.form.get('broker')
-        brorker = int(broker)
-        oversea = request.form.get('oversea')
-        oversea = int(oversea)
-        coloader = request.form.get('coloader')
-        coloader = int(coloader)
-
-
+        broker = int(request.form.get('broker'))
+        oversea = int(request.form.get('oversea'))
+        coloader = int(request.form.get('coloader'))
 
         client = request.form.get('client')
         company = request.form.get('company')
         email = request.form.get('email')
         phone = request.form.get('phone')
 
-
-        address = request.form.get('address').strip()
+        address = (request.form.get('address') or "").strip()
         delivery_type = request.form.get('delivery_type')
+
         ccn = request.form.get('ccn')
         old_ccn = request.form.get('old_ccn')
-        warehouse = request.form.get('warehouse')
-        warehouse = int(warehouse)
 
+        warehouse = int(request.form.get('warehouse'))
         lfdwarehouse = request.form.get('lfdwarehouse')
+
         onboard_date = request.form.get('onboard_date')
         payment_methods = request.form.get('payment_methods')
 
         trucker = request.form.get('trucker')
         readyForDeliver = request.form.get('readyForDeliver')
         close_date = request.form.get('close_date')
-        profit_in_CAD = request.form.get('profit_in_CAD')
+
         eta_to_client = request.form.get('eta_to_client')
 
-        if profit_in_CAD:
-            profit_in_CAD = float(profit_in_CAD)
-        else:
-            profit_in_CAD = 0
-
-
-        profit_in_USD = request.form.get('profit_in_USD')
-
-        if profit_in_USD:
-            profit_in_USD = float(profit_in_USD)
-        else:
-            profit_in_USD = 0
+        profit_in_CAD = float(request.form.get('profit_in_CAD') or 0)
+        profit_in_USD = float(request.form.get('profit_in_USD') or 0)
 
         processList = request.form.getlist('process')
         if processList:
-            process = ''.join(processList)
-            remark = process + remark
+            remark = ''.join(processList) + remark
 
 
+        # ===============================
+        # 参数化 SQL
+        # ===============================
 
+        sql = """
+        UPDATE Orders SET
+        operator = %s,
+        regular_client = %s,
+        import_or_export = %s,
+        remark = %s,
+        create_date = %s,
+        hold = %s,
+        shipping_type = %s,
+        service_type = %s,
+        status = %s,
+        bln = %s,
+        container_number = %s,
+        ssl_info = %s,
+        vessel_name = %s,
+        cargo_type = %s,
+        amount = %s,
+        weight = %s,
+        volume = %s,
+        size = %s,
+        train_company = %s,
+        origin_city = %s,
+        dest_country = %s,
+        dest_city = %s,
+        eta = %s,
+        broker = %s,
+        oversea = %s,
+        coloader = %s,
+        client = %s,
+        company = %s,
+        email = %s,
+        phone = %s,
+        address = %s,
+        delivery_type = %s,
+        ccn = %s,
+        old_ccn = %s,
+        warehouse = %s,
+        lfdwarehouse = %s,
+        onboard_date = %s,
+        payment_methods = %s,
+        trucker = %s,
+        readyForDeliver = %s,
+        close_date = %s,
+        profit_in_CAD = %s,
+        profit_in_USD = %s,
+        eta_to_client = %s
+        WHERE order_id = %s
+        """
 
-        sql = f"update Orders  SET  operator = {operator} , regular_client = '{regular_client}' , import_or_export = '{import_or_export}' , remark = '{remark}' , create_date = '{create_date}' , hold = '{hold}' , shipping_type = '{shipping_type}' , service_type = '{service_type}' , status = '{status}' , bln = '{bln}' , container_number = '{container_number}' ,ssl_info = '{ssl_info}' , vessel_name = '{vessel_name}' , cargo_type = '{cargo_type}' , amount = '{amount}' , weight = '{weight}' , volume = '{volume}' , size = '{size}' , train_company = '{train_company}' , origin_city = '{origin_city}' , dest_country = '{dest_country}' , dest_city = '{dest_city}' , eta = '{eta}' , broker = {broker} , oversea = {oversea} , coloader = {coloader} ,client = '{client}' , company = '{company}' , email = '{email}' , phone = '{phone}' , address = '{address}' , delivery_type = '{delivery_type}' , ccn = '{ccn}' , old_ccn = '{old_ccn}' ,  warehouse = {warehouse} , lfdwarehouse = '{lfdwarehouse}' , onboard_date = '{onboard_date}' , payment_methods = '{payment_methods}' ,  trucker = '{trucker}' , readyForDeliver = '{readyForDeliver}' , close_date = '{close_date}' , profit_in_CAD = {profit_in_CAD} , profit_in_USD = {profit_in_USD} ,eta_to_client = '{eta_to_client}'  WHERE order_id = '{order_id}' ; "
+        params = (
+            operator,
+            regular_client,
+            import_or_export,
+            remark,
+            create_date,
+            hold,
+            shipping_type,
+            service_type,
+            status,
+            bln,
+            container_number,
+            ssl_info,
+            vessel_name,
+            cargo_type,
+            amount,
+            weight,
+            volume,
+            size,
+            train_company,
+            origin_city,
+            dest_country,
+            dest_city,
+            eta,
+            broker,
+            oversea,
+            coloader,
+            client,
+            company,
+            email,
+            phone,
+            address,
+            delivery_type,
+            ccn,
+            old_ccn,
+            warehouse,
+            lfdwarehouse,
+            onboard_date,
+            payment_methods,
+            trucker,
+            readyForDeliver,
+            close_date,
+            profit_in_CAD,
+            profit_in_USD,
+            eta_to_client,
+            order_id
+        )
 
+        erro = tools.updateMysql(sql, params)
 
-        erro = tools.updateMysql(sql)
-
-        if not erro:
+        if erro is None:
             flash('Modification completed!', category='success')
-            return redirect(url_for('change', ID = order_id ))  # 重定向回登录页面
+            return redirect(url_for('change', ID=order_id))
         else:
-            return erro
+            app.logger.error(f"DB Error: {erro}")
+            flash('Database error occurred. Please contact admin.', category='danger')
+            return redirect(url_for('change', ID=order_id))
 
 
 
@@ -2751,7 +2831,7 @@ def status():
     inPortList = tools.queryMysql(sql)
 
 
-    sql = f"select order_id, Orders.remark, hold,  train_company , shipping_type, service_type, dest_city , eta , client , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where status = 'ON RAIL' {condition} ORDER BY eta ASC , User.name ASC"
+    sql = f"select order_id, Orders.remark, hold,  train_company , shipping_type, service_type, dest_city , eta , client , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name, container_number FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where status = 'ON RAIL' {condition} ORDER BY eta ASC , User.name ASC"
     onRailList = tools.queryMysql(sql)
 
     sql = f"select order_id, Orders.remark, hold, create_date, shipping_type, service_type, dest_city ,client , Orders.company , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where status = 'ON FLOOR' {condition} ORDER BY lfdwarehouse ASC , User.name ASC"
@@ -2779,12 +2859,12 @@ def accountant():
 #多伦多进仓货物查询
 @app.route('/torontowarehouse/')
 
-@login_required
+
 
 def torontowarehouse():
 
 
-    sql = "select order_id, Orders.remark, hold,  train_company , shipping_type, service_type, dest_city , eta , client , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id WHERE status = 'ON RAIL'  AND dest_city = 'TORONTO' AND shipping_type = 'LCL' AND delivery_type <> '自提' ORDER BY eta ASC , User.name ASC"
+    sql = "select order_id, Orders.remark, hold,  train_company , shipping_type, service_type, dest_city , eta , client , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id WHERE status = 'ON RAIL'  AND dest_city = 'TORONTO'  AND delivery_type <> '自提' ORDER BY eta ASC , User.name ASC"
     onRailList = tools.queryMysql(sql)
 
     sql = "select order_id, Orders.remark, hold, create_date, shipping_type, service_type, dest_city ,client , Orders.company , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where status = 'ON FLOOR'  AND dest_city = 'TORONTO' AND shipping_type = 'LCL' AND delivery_type <> '自提' ORDER BY lfdwarehouse ASC , User.name ASC"
@@ -2845,6 +2925,47 @@ def overseaOrderStatus():
     overseaList.remove((40,'自揽货'))
 
     return render_template('oversealogin.html', overseaList = overseaList )
+
+
+
+@app.route('/uploadexcel/', methods=['GET', 'POST'])
+def upload_excel():
+    folder_path = "/home/KTRANS/mysite/static/cache/"
+    # 清理旧文件
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Error deleting file {file_path}: {e}")
+
+    if request.method == 'POST':
+        entry_type = request.form.get('entry_type')  # 返回字符串，例如 "乐业excel录入"
+        cargo_id = request.form.get('cargo_id')  # 用户输入的货柜号
+
+        file = request.files['file']
+        if file:
+            filename = file.filename
+            current_path = os.path.join(folder_path, filename)
+            file.save(current_path)
+            if entry_type == "恒好达":
+                return excelreader.linkupreadexcel(current_path,cargo_id, filename)
+
+
+    return render_template('excelUpload.html')
+
+@app.route('/fba_order/', methods=['GET', 'POST'])
+def fba_order():
+    warehouse = 'YYZ1'
+    cargo_id = 'T304106'
+    pallets = '24'
+    date = '20260222'
+    cargo_list = [['OERU4112899', 'T304106','1', '39','7KA318HH'],['OERU4112899', 'T304106','1', '39','7KA318HH'],['OERU4112899', 'T304106','1', '39','7KA318HH'],['OERU4112899', 'T304106','1', '39','7KA318HH']]
+
+    deliveryOrder.FBA_deliveryorder(warehouse,cargo_id,pallets, date,cargo_list)
+
+    return "DO已经生成"
 
 
 

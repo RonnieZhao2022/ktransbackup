@@ -31,13 +31,30 @@
             z-index:2;
             background-color:lightgrey;
         }
+
+        /* 保证 text-truncate 生效 */
+        .text-truncate {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        /* 鼠标悬停显示 tooltip */
+        td[title] {
+            cursor: help;
+        }
+
+        /* 可选：自适应列宽 */
+        .table-responsive {
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
         <div >
-            <table class="table" style="font-size:15px;white-space:nowrap">
+            <table class="table" style="table-layout: fixed;font-size:15px;white-space:nowrap">
 
                 {%  if current_user.job_id in ['kathie','ronnie','david','tina','anna'] %}
                     <caption class="caption-top">{{terminal}} cargo info, 我司所有员工总共有{{myresult|length}}票</caption>
@@ -58,6 +75,7 @@
                         <th scope="col"  style="background-color:lightblue">状态</th>
                         <th scope="col"  style="background-color:lightblue">海关仓库</th>
                         <th scope="col"  style="background-color:lightblue">目的地</th>
+                        <th scope="col"  style="background-color:lightblue">派送地址</th>
                         <th scope="col"  style="background-color:lightblue">操作</th>
                     </tr>
                   </thead>
@@ -68,30 +86,71 @@
                   {%  for row in myresult %}
 
                     <tr >
-                        {%  for td in row %}
-
-                            {% if ((loop.index  == 1) or (loop.index  == 3)  or (loop.index  == 5)  or (loop.index  ==6) )  and (row[5] == 'ON RAIL' ) %}
-
-                                <td class="text-truncate fw-bolder bg-warning">{{td}}</td>
-
-                            {% elif loop.index == 7  %}
-
-                                <td class="text-truncate" ><a href="{{row[7]}}"  target="_blank">{{td}}</a></td>
-
-                            {% elif loop.index == 8  %}
 
 
+
+                            <!-- 第1列 ID -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[0] }}">
+                                {{ row[0] }}
+                            </td>
+
+                            <!-- 第2列 是否扣货 -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[1] }}">
+                                {{ row[1] }}
+                            </td>
+
+                            <!-- 第3列 terminal号 -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[2] }}">
+                                {{ row[2] }}
+                            </td>
+
+                            <!-- 第4列 火车公司 -->
+                            <td class="text-truncate" title="{{ row[3] }}">
+                                {{ row[3] }}
+                            </td>
+
+                            <!-- 第5列 抵达终端时间 -->
+                            {% set value = row[4] %}
+
+                            {% if value is none or value|string == 'None' or (value|string).startswith('000') %}
+                                <td class="text-truncate" style="width: 200px;" title="">
+
+                                </td>
                             {% else %}
-
-                                <td class="text-truncate" >{{td}}</td>
-
+                                <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}"
+                                    title="{{ row[4] }}" style="width: 150px;">
+                                    {{ row[4] }}
+                                </td>
                             {% endif %}
 
 
 
-                        {% endfor  %}
+                            <!-- 第6列 状态 -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[5] }}">
+                                {{ row[5] }}
+                            </td>
 
-                        <td><a href = "/pchange/{{row[0]}}/"   target="_blank">局部修改</a></td>
+                            <!-- 第7列 海关仓库，带链接 -->
+                            <td class="text-truncate" title="{{ row[6] }}">
+                                <a href="{{ row[7] }}" target="_blank">{{ row[6] }}</a>
+                            </td>
+
+                            <!-- 第8列 目的地 -->
+                            <td class="text-truncate" title="{{ row[7] }}">
+                                {{ row[8] }}
+                            </td>
+
+                            <!-- 第9列 派送地址，固定宽度150px -->
+                            <td class="text-truncate" style="width:200px;" title="{{ row[9] }}">
+                                {{ row[9] }}
+                            </td>
+
+
+
+
+
+
+                        <td><a href = "/change/{{row[0]}}/"   target="_blank">局部修改</a></td>
 
 
                     </tr>
@@ -105,6 +164,7 @@
 
             </table>
         </div>
+
 
 
 

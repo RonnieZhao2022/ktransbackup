@@ -94,21 +94,32 @@ def insertMysql(sql,info):
         cursor.close()
         return jsonpickle.encode(e)
 
-def updateMysql(sql):
+def updateMysql(sql, params=None):
+    """
+    支持两种模式：
+    1. updateMysql(sql)
+    2. updateMysql(sql, params)
+    """
 
     conn, cursor = connectMysql()
 
     try:
-        # 执行SQL语句
-        cursor.execute(sql)
+        # 如果有参数数组
+        if params:
+            cursor.execute(sql, params)
+        else:
+            cursor.execute(sql)
 
-        # 提交到数据库执行
         conn.commit()
         cursor.close()
+        conn.close()
+
+        return True
+
     except pymysql.Error as e:
-        # 发生错误时回滚
         conn.rollback()
         cursor.close()
+        conn.close()
         return jsonpickle.encode(e)
 
 def fillComboBox(id,column, tableName, condition = ''):

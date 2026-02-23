@@ -22,16 +22,16 @@
             <h3 class="text-center my-5"><strong>最新汇率更新于2024-11-25</strong></h3>
 
             <ol>
-                <li>* 当开出的发票是美金金额时，如客人支付加币，FX系统会按照1.48 的汇率折算美金至加币</li>
-                <li>加币成本折算成美金和客人去做收款, CAD --> USD    1.32,比如应付给上家费用为100 CAD, 和客人收款美金为 100/1.32(包括美设和华迪等国内)</li>
-                <li>我们加币的发票金额，客人想支付美金，也是通过加币金额/1.32 得出美金应收金额</li>
+                <li>* 当开出的发票是美金金额时，如客人支付加币，FX系统会按照1.45 的汇率折算美金至加币</li>
+                <li>加币成本折算成美金和客人去做收款, CAD --> USD    1.19,比如应付给上家费用为100 CAD, 和客人收款美金为 100/1.19(包括美设和华迪等国内)</li>
+                <li>我们加币的发票金额，客人想支付美金，也是通过加币金额/1.19 得出美金应收金额</li>
 
             </ol>
         </div>
 
         <form id="conversion-form">
             <div class="form-group">
-                <label for="cad-usd">CAD-USD 普通加币转美金!汇率1:1.32</label><br>
+                <label for="cad-usd">CAD-USD 普通加币转美金!汇率1:1.19</label><br>
                 <input type="number" class="form-control"  step = "0.01" id="cad-usd"  name ="cad-usd" placeholder="请输入需要转换加币值">
                 <button type="submit">转换</button>
                 <p id = "cad-usd-result">最终结果</p><br>
@@ -43,7 +43,7 @@
                 event.preventDefault(); // 阻止表单的默认行为
 
               var cadValue = document.getElementById("cad-usd").value; // 获取用户输入的加币值
-              var usdValue = cadValue / 1.32; // 将加币值转换为美元值
+              var usdValue = cadValue / 1.19; // 将加币值转换为美元值
 
                 usdValue = usdValue.toFixed(2)
 
