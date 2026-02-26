@@ -50,6 +50,9 @@ import datetime
 
 import excelreader
 
+from pymysql.cursors import DictCursor
+import pymysql
+
 
 
 
@@ -2831,7 +2834,7 @@ def status():
     inPortList = tools.queryMysql(sql)
 
 
-    sql = f"select order_id, Orders.remark, hold,  train_company , shipping_type, service_type, dest_city , eta , client , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name, container_number FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where status = 'ON RAIL' {condition} ORDER BY eta ASC , User.name ASC"
+    sql = f"select order_id, Orders.remark, hold,  train_company , shipping_type, service_type, dest_city ,CASE  WHEN LEFT(eta, 1) IN ('2','0') THEN SUBSTRING(eta, 6) ELSE eta END, client , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name, container_number FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where status = 'ON RAIL' {condition} ORDER BY eta ASC , User.name ASC"
     onRailList = tools.queryMysql(sql)
 
     sql = f"select order_id, Orders.remark, hold, create_date, shipping_type, service_type, dest_city ,client , Orders.company , Orders.phone , Orders.address , delivery_type , ccn , lfdwarehouse , payment_methods ,  trucker , readyForDeliver, Oversea.company, Broker.company, Warehouse.company, Warehouse.website, amount, weight, volume, size  , User.name FROM Orders JOIN User ON User.user_id = Orders.operator  JOIN Broker ON Orders.broker = Broker.broker_id  JOIN Oversea ON Orders.oversea = Oversea.oversea_id JOIN Warehouse ON Orders.warehouse = Warehouse.warehouse_id where status = 'ON FLOOR' {condition} ORDER BY lfdwarehouse ASC , User.name ASC"
@@ -2955,19 +2958,233 @@ def upload_excel():
 
     return render_template('excelUpload.html')
 
+
+
+
+
 @app.route('/fba_order/', methods=['GET', 'POST'])
 def fba_order():
-    warehouse = 'YYZ1'
-    cargo_id = 'T304106'
-    pallets = '24'
-    date = '20260222'
-    cargo_list = [['OERU4112899', 'T304106','1', '39','7KA318HH'],['OERU4112899', 'T304106','1', '39','7KA318HH'],['OERU4112899', 'T304106','1', '39','7KA318HH'],['OERU4112899', 'T304106','1', '39','7KA318HH']]
+    result = {}
 
-    deliveryOrder.FBA_deliveryorder(warehouse,cargo_id,pallets, date,cargo_list)
+    # 第一层查询 DISTINCT cargo_id
+    sql_titles = """
+    SELECT DISTINCT
+        f.cargo_id,
+        o.container_number,
+        o.status
+    FROM FBA_orders f
+    LEFT JOIN Orders o
+        ON f.cargo_id = o.order_id
+    WHERE f.status IN ('即将入仓','在仓库')
+    ORDER BY f.cargo_id;
+    """
 
-    return "DO已经生成"
+    titles = tools.queryMysql(sql_titles)  # [(cargo_id, container_number, status), ...]
+
+    for cargo_id, container_number, status in titles:
+        # 第二层查询明细
+        sql_details = f"""
+        SELECT
+            shipment_id,
+            mark,
+            pallets,
+            pieces,
+            po_list,
+            FBA_warehouse
+        FROM FBA_orders
+        WHERE cargo_id = '{cargo_id}'
+          AND status <> '已派送'
+        ORDER BY FBA_warehouse,FIELD(status, '在仓库', '即将入仓'), shipment_id;
+        """
+
+        details = tools.queryMysql(sql_details)
+
+        # 存入字典
+        result[cargo_id] = {
+            "container_number": container_number,
+            "status": status,
+            "details": details
+        }
 
 
+
+
+
+
+
+
+
+    if request.method == 'POST':
+        warehouse = 'YXU1'
+        cargo_id = 'T304114&T304127&T304117&T304142'
+        pallets = '14'
+        date = '20260223'
+        cargo_list = [	 ('SDCU1217863','T304114','4','641','17ZT8L2Y'),
+    	 ('SDCU1217863','T304114','1','174','3PHSYHHR'),
+    	 ('SMCU1273490','T304127',1,175,'8WJPDTJD'),
+    	 ('KOCU4004464','T304117',3,228,'8LBRW5TB'),
+    	 ('HMMU7122187','T304142',5,400,'7ALP3ONX')
+    ]
+        filePath = '/home/KTRANS/mysite/static/files/FBA/'
+
+        for filename in os.listdir(filePath):
+            file_full_path = os.path.join(filePath, filename)
+
+            if os.path.isfile(file_full_path):
+                os.remove(file_full_path)
+
+        return deliveryOrder.FBA_deliveryorder(warehouse,cargo_id,pallets, date,cargo_list)
+
+    # 传给模板
+    return render_template("FBA_Order.html", cargo_data=result)
+
+
+
+@app.route('/fba_edit/', methods=['GET', 'POST'])
+def fba_edit():
+    # 如果是 POST 提交，先处理表单
+    if request.method == 'POST':
+        for key, value in request.form.items():
+            # 表单字段 name 格式： pallets_<cargo_id>_<shipment_id>
+            if key.startswith("pallets_"):
+                try:
+                    _, cargo_id, shipment_id = key.split("_")
+                    # 更新数据库
+                    sql = "UPDATE FBA_orders SET pallets = %s WHERE cargo_id = %s AND shipment_id = %s"
+                    tools.queryMysql(sql, (value, cargo_id, shipment_id))
+                except Exception as e:
+                    print("更新出错:", key, value, e)
+        # POST 后刷新页面
+        return redirect(url_for('fba_edit'))
+
+    # GET 请求，生成页面数据
+    result = {}
+
+    # 第一层查询 DISTINCT cargo_id
+    sql_titles = """
+    SELECT DISTINCT
+        f.cargo_id,
+        o.container_number,
+        SUBSTRING(o.eta, 6, 5) AS eta,
+        o.status
+    FROM FBA_orders f
+    LEFT JOIN Orders o
+        ON f.cargo_id = o.order_id
+    WHERE f.status IN ('即将入仓','在仓库')
+    ORDER BY o.eta;
+    """
+    titles = tools.queryMysql(sql_titles)
+
+    for cargo_id, container_number,eta, status in titles:
+        # 第二层查询明细
+        sql_details = f"""
+        SELECT
+            shipment_id,
+            mark,
+            pallets,
+            pieces,
+            po_list,
+            FBA_warehouse
+        FROM FBA_orders
+        WHERE cargo_id = '{cargo_id}'
+          AND status <> '已派送'
+        ORDER BY FBA_warehouse, FIELD(status, '在仓库', '即将入仓'), shipment_id;
+        """
+        details = tools.queryMysql(sql_details)
+
+        result[cargo_id] = {
+            "container_number": container_number,
+            "status": status,
+            "eta": eta,
+            "details": details
+        }
+
+    return render_template("FBA_Edit.html", cargo_data=result)
+
+
+
+#编辑拼柜货明细表
+@app.route('/GroupageOrder_manage/', methods=['GET','POST'])
+def GroupageOrder_manage():
+
+    if request.method == 'POST':
+        def clean_int(value):
+            return int(value) if value and value.strip() != "" else None
+
+        def clean_decimal(value):
+            return float(value) if value and value.strip() != "" else None
+
+        for key in request.form:
+            if key.startswith("pieces_"):
+                sub_id = key.split("_")[1]
+
+                sql = """
+                UPDATE GroupageOrders
+                SET pieces=%s,
+                    weight=%s,
+                    volumn=%s,
+                    pallets_number=%s,
+                    size=%s,
+                    client=%s,
+                    phone=%s,
+                    email=%s,
+                    address=%s,
+                    delivery_type=%s,
+                    hold=%s,
+                    remark=%s,
+                    status=%s
+                WHERE sub_id=%s
+                """
+
+                params = (
+                    clean_int(request.form.get(f"pieces_{sub_id}")),
+                    clean_int(request.form.get(f"weight_{sub_id}")),
+                    clean_decimal(request.form.get(f"volumn_{sub_id}")),
+                    clean_int(request.form.get(f"pallets_number_{sub_id}")),
+                    request.form.get(f"size_{sub_id}") or None,
+                    request.form.get(f"client_{sub_id}") or None,
+                    request.form.get(f"phone_{sub_id}") or None,
+                    request.form.get(f"email_{sub_id}") or None,
+                    request.form.get(f"address_{sub_id}") or None,
+                    request.form.get(f"delivery_type_{sub_id}") or None,
+                    request.form.get(f"hold_{sub_id}") or None,
+                    request.form.get(f"remark_{sub_id}") or None,
+                    request.form.get(f"status_{sub_id}"),
+                    sub_id
+                )
+
+                tools.updateMysql(sql, params)
+
+        return redirect(url_for('GroupageOrder_manage'))
+
+    # ====== GET 部分改成字典游标 ======
+
+    conn = pymysql.connect(
+        host='KTRANS.mysql.pythonanywhere-services.com',
+        user='KTRANS',
+        password='ktrans6477021238',
+        database='KTRANS$ktrans',
+        charset='utf8mb4',
+
+
+        cursorclass=DictCursor   # ⭐ 关键在这里
+    )
+
+    cursor = conn.cursor()
+
+    sql = "SELECT * FROM GroupageOrders ORDER BY main_order"
+    cursor.execute(sql)
+    data = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    # 分组
+    grouped = {}
+    for row in data:
+        grouped.setdefault(row['main_order'], []).append(row)
+
+    return render_template("Groupage_manage.html", grouped=grouped)
 
 
 if __name__=='__main__':

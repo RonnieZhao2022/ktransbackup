@@ -48,7 +48,7 @@ def weather(city):
 
 
 
-def queryMysql(sql):
+'''def queryMysql(sql):
 
     conn, cursor = connectMysql()
 
@@ -57,7 +57,20 @@ def queryMysql(sql):
     result = cursor.fetchall()
     cursor.close()
 
-    return result
+    return result '''
+
+def queryMysql(sql, params=None):
+    conn, cursor = connectMysql()
+    try:
+        if params:
+            cursor.execute(sql, params)
+        else:
+            cursor.execute(sql)
+        conn.commit()   # ✅ 必须 commit
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -111,16 +124,17 @@ def updateMysql(sql, params=None):
             cursor.execute(sql)
 
         conn.commit()
-        cursor.close()
-        conn.close()
 
-        return True
+        return None
 
     except pymysql.Error as e:
         conn.rollback()
+
+        return str(e)
+
+    finally:
         cursor.close()
         conn.close()
-        return jsonpickle.encode(e)
 
 def fillComboBox(id,column, tableName, condition = ''):
 

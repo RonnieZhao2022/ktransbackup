@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>拼柜货物管理</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .accordion-button {
+            font-weight: 600;
+        }
+        .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: #343a40;
+            color: #fff;
+        }
+        input, select {
+            min-width: 80px;
+        }
+        /* 紧凑列 */
+        .col-narrow {
+            width: 1%;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container-fluid mt-3">
+
+<h4 class="mb-3">拼柜货物管理</h4>
+
+<form method="POST">
+
+<div class="accordion" id="accordionMain">
+
+{% for main_order, rows in grouped.items() %}
+
+<div class="accordion-item shadow-sm mb-3">
+
+    <h2 class="accordion-header" id="heading{{loop.index}}">
+        <button class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapse{{loop.index}}">
+            {{ main_order }}
+            <span class="badge bg-primary ms-3">{{ rows|length }} 条</span>
+        </button>
+    </h2>
+
+    <div id="collapse{{loop.index}}"
+         class="accordion-collapse collapse"
+         data-bs-parent="#accordionMain">
+
+        <div class="accordion-body p-0">
+
+            <div class="table-responsive">
+
+            <table class="table table-bordered table-hover table-sm align-middle mb-0">
+
+                <thead class="table-dark text-center">
+                <tr>
+                    <th>sub_id</th>
+                    <th>mark</th>
+                    <th class="col-narrow">件数</th>
+                    <th class="col-narrow">重量</th>
+                    <th class="col-narrow">体积</th>
+                    <th class="col-narrow">板数</th>
+                    <th>尺寸</th>
+                    <th class="col-narrow">客户</th>
+                    <th>电话</th>
+                    <th>Email</th>
+                    <th>地址</th>
+                    <th>派送方式</th>
+                    <th>扣放货</th>
+                    <th>状态</th>
+                    <th>备注</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                {% for row in rows %}
+
+                <tr
+                {% if row.status == '未到仓' %}
+                    class="table-secondary"
+                {% elif row.status == '在仓库' %}
+                    class="table-warning"
+                {% elif row.status == '已预约' %}
+                    class="table-info"
+                {% elif row.status == '已派送' %}
+                    class="table-success"
+                {% endif %}
+                >
+
+                    <td class="fw-bold text-center">{{ row.sub_id }}</td>
+                    <td>{{ row.mark }}</td>
+
+                    <td class="col-narrow">
+                        <input type="number" class="form-control form-control-sm"
+                               name="pieces_{{row.sub_id}}" value="{{ row.pieces if row.pieces is not none else '' }}">
+                    </td>
+
+                    <td class="col-narrow">
+                        <input type="number" class="form-control form-control-sm"
+                               name="weight_{{row.sub_id}}" value="{{ row.weight if row.weight is not none else '' }}">
+                    </td>
+
+                    <td class="col-narrow">
+                        <input type="number" step="0.01" class="form-control form-control-sm"
+                               name="volumn_{{row.sub_id}}" value="{{ row.volumn|string if row.volumn is not none else '' }}">
+                    </td>
+
+                    <td class="col-narrow">
+                        <input type="number" class="form-control form-control-sm"
+                               name="pallets_number_{{row.sub_id}}" value="{{ row.pallets_number if row.pallets_number is not none else '' }}">
+                    </td>
+
+                    <td>
+                        <input type="text" class="form-control form-control-sm"
+                               name="size_{{row.sub_id}}" value="{{ row.size or '' }}">
+                    </td>
+
+                    <td class="col-narrow">
+                        <input type="text" class="form-control form-control-sm"
+                               name="client_{{row.sub_id}}" value="{{ row.client or '' }}">
+                    </td>
+
+                    <td>
+                        <input type="text" class="form-control form-control-sm"
+                               name="phone_{{row.sub_id}}" value="{{ row.phone or '' }}">
+                    </td>
+
+                    <td>
+                        <input type="email" class="form-control form-control-sm"
+                               name="email_{{row.sub_id}}" value="{{ row.email or '' }}">
+                    </td>
+
+                    <td>
+                        <input type="text" class="form-control form-control-sm"
+                               name="address_{{row.sub_id}}" value="{{ row.address or '' }}">
+                    </td>
+
+                    <td>
+                        <select class="form-select form-select-sm"
+                                name="delivery_type_{{row.sub_id}}">
+                            <option value="dock to dock" {% if (row.delivery_type or '未知')=='dock to dock' %}selected{% endif %}>dock to dock</option>
+                            <option value="tailgate" {% if (row.delivery_type or '未知')=='tailgate' %}selected{% endif %}>tailgate</option>
+                            <option value="未知" {% if (row.delivery_type or '未知')=='未知' %}selected{% endif %}>未知</option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <select class="form-select form-select-sm"
+                                name="hold_{{row.sub_id}}">
+                            <option value="国内扣货" {% if row.hold=='国内扣货' %}selected{% endif %}>国内扣货</option>
+                            <option value="国内放货" {% if row.hold=='国内放货' %}selected{% endif %}>国内放货</option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <select class="form-select form-select-sm fw-bold"
+                                name="status_{{row.sub_id}}">
+                            <option value="未到仓" {% if row.status=='未到仓' %}selected{% endif %}>未到仓</option>
+                            <option value="在仓库" {% if row.status=='在仓库' %}selected{% endif %}>在仓库</option>
+                            <option value="已预约" {% if row.status=='已预约' %}selected{% endif %}>已预约</option>
+                            <option value="已派送" {% if row.status=='已派送' %}selected{% endif %}>已派送</option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <input type="text" class="form-control form-control-sm"
+                               name="remark_{{row.sub_id}}" value="{{ row.remark or '' }}">
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+            </table>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endfor %}
+
+<button class="btn btn-primary w-100 mt-3 shadow">保存全部修改</button>
+
+</form>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

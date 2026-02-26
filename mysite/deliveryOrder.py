@@ -8,6 +8,8 @@ from copy import deepcopy
 
 from docx import Document
 
+from flask import send_from_directory
+
 
 
 def deliveryorder(ID):
@@ -105,9 +107,18 @@ def FBA_deliveryorder(warehouse, cargo_id, pallets, date, cargo_list):
                 p.clear()  # 或者 cell._element.remove(p._p)
 
 
-    # 保存文档
-    filename = '/home/KTRANS/mysite/static/files/FBA/%s--%s-RonnieFile%spallets%s.docx' % (
+    filePath = '/home/KTRANS/mysite/static/files/FBA/'
+
+    filename = '%s--%s-RonnieFile%spallets%s.docx' % (
         warehouse, cargo_id, pallets, date
     )
-    DO.save(filename)
+
+    full_path = os.path.join(filePath, filename)
+
+    DO.save(full_path)
+
+    return send_from_directory(filePath, filename, as_attachment=True)
+
+
+
 

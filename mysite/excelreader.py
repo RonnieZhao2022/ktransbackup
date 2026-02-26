@@ -118,8 +118,8 @@ def linkupreadexcel(path, cargo_id, filename):
     # 读取第一个 sheet（默认）
     df = pd.read_excel(path, sheet_name=0, header=None)  # 0 表示第一个 sheet
     batch = filename
-    if '派送表-' in filename:
-        batch = batch.replace('派送表-', '')
+    if '-' in filename:
+        batch = filename.split('-', 1)[1].strip()
     if '.xlsx' in filename:
         batch = batch.replace('.xlsx', '')
 
