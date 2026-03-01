@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>POD 文件浏览</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+.file-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.file-item { width: 200px; border: 1px solid #ccc; border-radius: 5px; padding: 5px; text-align: center; }
+.file-item img { max-width: 100%; height: auto; border-radius: 3px; }
+.file-item a { display: block; margin-top: 5px; word-break: break-all; }
+</style>
+</head>
+<body>
+<h2>POD 文件浏览</h2>
+<div class="file-list">
+    {% for f in files %}
+    <div class="file-item">
+        {% if f.lower().endswith(('.jpg','.jpeg','.png')) %}
+            <!-- 图片文件显示缩略图 -->
+            <img src="{{ f }}" alt="{{ f.split('/')[-1] }}">
+        {% elif f.lower().endswith('.pdf') %}
+            <!-- PDF 文件显示占位图 -->
+            <div style="
+                width:180px; height:120px;
+                display:flex; align-items:center; justify-content:center;
+                border:1px solid #ccc; border-radius:5px;
+                background-color:#f0f0f0;
+                font-weight:bold;
+                color:#a00;
+            ">PDF</div>
+        {% endif %}
+        <a href="{{ f }}" target="_blank">{{ f.split('/')[-1] }}</a>
+    </div>
+    {% endfor %}
+</div>
+</body>
+</html>

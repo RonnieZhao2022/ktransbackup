@@ -126,7 +126,6 @@ def linkupreadexcel(path, cargo_id, filename):
 
     mark = ''
     FBA_warehouse = ''
-    delivery_type = ''
     errors = []
     info_count = 0
 
@@ -144,17 +143,17 @@ def linkupreadexcel(path, cargo_id, filename):
                 FBA_warehouse = row[9] if pd.notna(row[9]) else FBA_warehouse
                 volume = to_number(row[10])
                 weight = to_number(row[11])
-                delivery_type = row[12] if pd.notna(row[12]) else delivery_type
+                remark = row.iloc[13] if len(row) > 13 else ''
 
 
 
                 info = (
-                    batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , delivery_type
+                    batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , remark
                 )
 
                 insert_sql = """
                     INSERT INTO FBA_orders (
-                        batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , delivery_type
+                        batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , remark
                     ) VALUES (
                         %s, %s, %s, %s, %s,
                         %s, %s, %s, %s, %s,

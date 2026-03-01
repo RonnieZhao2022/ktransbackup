@@ -21,10 +21,10 @@
 </head>
 <body>
 
-<div class="container my-3">
+<div class=" my-3">
     <h2 class="text-center mb-3">FBA 货物明细录入</h2>
 
-    <form method="post" action="{{ url_for('fba_edit') }}">
+    <form method="post" action="{{ url_for('fba_order') }}">
         <div class="accordion" id="cargoAccordion">
             {% for cargo_id, cargo in cargo_data.items() %}
             <div class="accordion-item mb-2">
@@ -52,6 +52,7 @@
                                         <th>Pieces</th>
                                         <th>PO List</th>
                                         <th>FBA</th>
+                                        <th>备注</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -68,6 +69,11 @@
                                         <td>{{ row[3] }}</td>
                                         <td>{{ row[4] }}</td>
                                         <td>{{ row[5] }}</td>
+                                        <td>
+                                            <input type="text" class="form-control"
+                                                   name="remark_{{ cargo_id }}_{{ row[0] }}"
+                                                   value="{{ row[6]}}">
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

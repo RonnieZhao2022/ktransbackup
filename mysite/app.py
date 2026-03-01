@@ -53,7 +53,9 @@ import excelreader
 from pymysql.cursors import DictCursor
 import pymysql
 
+from collections import defaultdict
 
+import uuid
 
 
 
@@ -3006,14 +3008,6 @@ def fba_order():
             "details": details
         }
 
-
-
-
-
-
-
-
-
     if request.method == 'POST':
         warehouse = 'YXU1'
         cargo_id = 'T304114&T304127&T304117&T304142'
@@ -3040,24 +3034,47 @@ def fba_order():
 
 
 
-@app.route('/fba_edit/', methods=['GET', 'POST'])
+@app.route('/ktranslikupfba20260228/', methods=['GET', 'POST'])
 def fba_edit():
     # 如果是 POST 提交，先处理表单
     if request.method == 'POST':
         for key, value in request.form.items():
-            # 表单字段 name 格式： pallets_<cargo_id>_<shipment_id>
-            if key.startswith("pallets_"):
-                try:
+            try:
+
+
+                if key.startswith("remark_"):
                     _, cargo_id, shipment_id = key.split("_")
-                    # 更新数据库
-                    sql = "UPDATE FBA_orders SET pallets = %s WHERE cargo_id = %s AND shipment_id = %s"
+                    sql = "UPDATE FBA_orders SET remark = %s WHERE cargo_id = %s AND shipment_id = %s"
                     tools.queryMysql(sql, (value, cargo_id, shipment_id))
-                except Exception as e:
-                    print("更新出错:", key, value, e)
+
+                # 新增：处理上火车货柜备注
+                elif key.startswith("onrail_remark_"):
+                    # key = "onrail_remark_123456" -> order_id = 123456
+                    order_id = key[len("onrail_remark_"):]  # 取 name 中 15 位之后的部分
+                    sql = "UPDATE Orders SET remark = %s WHERE order_id = %s"
+                    tools.queryMysql(sql, (value, order_id))
+
+
+            except Exception as e:
+                print("更新出错:", key, value, e)
+
         # POST 后刷新页面
         return redirect(url_for('fba_edit'))
 
     # GET 请求，生成页面数据
+
+    #查询 Orders 表中 status = 'ON RAIL' 且 oversea = 72 的记录
+
+
+    sql = """
+        SELECT Order_id, container_number, eta, remark
+        FROM Orders
+        WHERE oversea = %s AND status = %s order by eta
+    """
+    onrailList = tools.queryMysql(sql, (72, 'ON RAIL'))
+
+
+
     result = {}
 
     # 第一层查询 DISTINCT cargo_id
@@ -3065,13 +3082,13 @@ def fba_edit():
     SELECT DISTINCT
         f.cargo_id,
         o.container_number,
-        SUBSTRING(o.eta, 6, 5) AS eta,
+        SUBSTRING(DATE_ADD(o.eta, INTERVAL 2 DAY), 6, 5) AS eta,
         o.status
     FROM FBA_orders f
     LEFT JOIN Orders o
         ON f.cargo_id = o.order_id
     WHERE f.status IN ('即将入仓','在仓库')
-    ORDER BY o.eta;
+    ORDER BY o.eta DESC;
     """
     titles = tools.queryMysql(sql_titles)
 
@@ -3084,7 +3101,11 @@ def fba_edit():
             pallets,
             pieces,
             po_list,
-            FBA_warehouse
+            FBA_warehouse,
+            Inbound_date,
+            remark,
+            book_date
+
         FROM FBA_orders
         WHERE cargo_id = '{cargo_id}'
           AND status <> '已派送'
@@ -3099,7 +3120,7 @@ def fba_edit():
             "details": details
         }
 
-    return render_template("FBA_Edit.html", cargo_data=result)
+    return render_template("FBA_Edit.html", cargo_data=result, onrailList =onrailList )
 
 
 
@@ -3124,7 +3145,7 @@ def GroupageOrder_manage():
                     weight=%s,
                     volumn=%s,
                     pallets_number=%s,
-                    size=%s,
+                    cargo=%s,
                     client=%s,
                     phone=%s,
                     email=%s,
@@ -3141,7 +3162,7 @@ def GroupageOrder_manage():
                     clean_int(request.form.get(f"weight_{sub_id}")),
                     clean_decimal(request.form.get(f"volumn_{sub_id}")),
                     clean_int(request.form.get(f"pallets_number_{sub_id}")),
-                    request.form.get(f"size_{sub_id}") or None,
+                    request.form.get(f"cargo_{sub_id}") or None,
                     request.form.get(f"client_{sub_id}") or None,
                     request.form.get(f"phone_{sub_id}") or None,
                     request.form.get(f"email_{sub_id}") or None,
@@ -3185,6 +3206,197 @@ def GroupageOrder_manage():
         grouped.setdefault(row['main_order'], []).append(row)
 
     return render_template("Groupage_manage.html", grouped=grouped)
+
+
+@app.route('/fba_generate/', methods=['GET', 'POST'])
+def fba_generate():
+
+    # ------------------------
+    # 连接数据库
+    # ------------------------
+    conn = pymysql.connect(
+        host='KTRANS.mysql.pythonanywhere-services.com',
+        user='KTRANS',
+        password='ktrans6477021238',
+        database='KTRANS$ktrans',
+        charset='utf8mb4',
+        cursorclass=DictCursor
+    )
+
+    cursor = conn.cursor()
+
+    # =========================
+    # POST：批量更新入仓时间
+    # =========================
+    if request.method == 'POST':
+        selected_ids = request.form.getlist('selected_items')
+        inbound_date = request.form.get('inbound_date')
+
+        if selected_ids and inbound_date:
+            format_strings = ','.join(['%s'] * len(selected_ids))
+            sql = f"""
+                UPDATE FBA_orders
+                SET inbound_date = %s
+                WHERE shipment_id IN ({format_strings})
+            """
+            cursor.execute(sql, [inbound_date] + selected_ids)
+            conn.commit()
+            flash("入仓时间更新成功！")
+
+        cursor.close()
+        conn.close()
+        return redirect(url_for('fba_generate'))
+
+    # =========================
+    # GET：加载页面数据
+    # =========================
+    sql = """
+    SELECT
+        f.shipment_id,
+        f.cargo_id,
+        f.FBA_warehouse,
+        f.mark,
+        f.pallets,
+        f.cartons,
+        f.pieces,
+        f.po_list,
+        f.status,
+        f.book_date,
+        f.inbound_date,
+        o.status AS order_status,
+        s.pallets AS total_pallets,
+        s.remark,
+        s.cn_instruction
+    FROM FBA_orders f
+    JOIN Orders o ON o.order_id = f.cargo_id
+    LEFT JOIN FBA_orders_summary s
+        ON s.cargo_id = f.cargo_id
+        AND s.FBA_warehouse = f.FBA_warehouse
+    WHERE o.status IN ('ON RAIL', 'PICKEDUP')
+    ORDER BY
+        FIELD(o.status, 'PICKEDUP','ON RAIL'),
+        f.FBA_warehouse,
+        f.cargo_id
+    """
+
+    cursor.execute(sql)
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # =========================
+    # 数据整理：按仓库分组 + 每 cargo 生成唯一 group_id
+    # =========================
+    warehouse_data = defaultdict(lambda: defaultdict(list))
+    for r in rows:
+        warehouse = r['FBA_warehouse']
+        cargo = r['cargo_id']
+        warehouse_data[warehouse][cargo].append(r)
+
+    structured_data = {}
+    for warehouse, cargos in warehouse_data.items():
+        structured_data[warehouse] = []
+        for cargo_id, shipments in cargos.items():
+            group_id = str(uuid.uuid4()).replace("-", "")
+            structured_data[warehouse].append({
+                "cargo_id": cargo_id,
+                "group_id": group_id,
+                "shipments": shipments
+            })
+
+    return render_template('fba_generate.html', warehouse_data=structured_data)
+
+#手机拍照上传POD
+@app.route('/phone_upload_pod/<cargo_id>/', methods=['GET','POST'])
+def phone_upload_pod(cargo_id):
+
+    # 基础上传目录
+    base_folder = "static/pod"
+
+    # 每个单号一个文件夹
+    upload_folder = os.path.join(base_folder, cargo_id)
+
+    # 如果文件夹不存在就创建
+    os.makedirs(upload_folder, exist_ok=True)
+
+    # =================
+    # GET：打开页面
+    # =================
+    if request.method == "GET":
+        return render_template("phone_upload_pod.html",
+                               cargo_id=cargo_id)
+
+    # =================
+    # POST：保存文件
+    # =================
+
+    # 从前端获取文件
+    file = request.files.get('pod_photo')
+
+    if not file:
+        return "没有文件"
+
+    # 获取扩展名
+    ext = file.filename.split('.')[-1].lower()
+
+    # 支持 jpg, jpeg, png, pdf
+    if ext not in ['jpg', 'jpeg', 'png', 'pdf']:
+        return "只允许上传图片或 PDF 文件"
+
+    # 如果是图片，统一保存为 jpg
+    if ext in ['jpeg', 'png']:
+        ext = "jpg"
+
+    # 构造基础文件名
+    base_filename = f"{cargo_id}_pod"
+    filename = f"{base_filename}.{ext}"
+    save_path = os.path.join(upload_folder, filename)
+
+    # 如果重名，自动编号
+    counter = 1
+    while os.path.exists(save_path):
+        filename = f"{base_filename}_{counter}.{ext}"
+        save_path = os.path.join(upload_folder, filename)
+        counter += 1
+
+    # 保存文件
+    file.save(save_path)
+
+    # 生成访问URL
+    image_url = url_for('static', filename=f"pod/{cargo_id}/{filename}")
+
+    # 前端显示
+    if ext == "pdf":
+        return f"""
+        <h3>上传成功 ✅</h3>
+        <a href="{image_url}" target="_blank">点击查看 PDF 文件</a>
+        """
+    else:
+        return f"""
+        <h3>上传成功 ✅</h3>
+        <img src="{image_url}" style="max-width:100%;height:auto;">
+        """
+
+@app.route('/view_pod/<cargo_id>/')
+def view_pod(cargo_id):
+    # 基础上传目录
+    base_folder = "static/pod"
+
+    # 每个单号一个文件夹
+    folder = os.path.join(base_folder, cargo_id)
+
+    if not os.path.exists(folder):
+        return f"没有找到 POD 文件夹: {cargo_id}"
+
+    files = os.listdir(folder)
+    # 只保留常用文件类型
+    files = [f for f in files if f.lower().endswith(('.jpg', '.jpeg', '.png', '.pdf'))]
+
+    file_urls = [url_for('static', filename=f'pod/{cargo_id}/{f}') for f in files]
+
+    return render_template('view_pod.html', files=file_urls)
+
+
 
 
 if __name__=='__main__':

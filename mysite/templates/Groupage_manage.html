@@ -68,20 +68,20 @@
 
                 <thead class="table-dark text-center">
                 <tr>
-                    <th>sub_id</th>
-                    <th>mark</th>
+                    <th class="col-narrow">sub_id</th>
+                    <th class="col-narrow">mark</th>
                     <th class="col-narrow">件数</th>
                     <th class="col-narrow">重量</th>
                     <th class="col-narrow">体积</th>
                     <th class="col-narrow">板数</th>
-                    <th>尺寸</th>
+                    <th class="col-narrow">品名</th>
                     <th class="col-narrow">客户</th>
-                    <th>电话</th>
-                    <th>Email</th>
+                    <th class="col-narrow">电话</th>
+                    <th class="col-narrow">Email</th>
                     <th>地址</th>
-                    <th>派送方式</th>
-                    <th>扣放货</th>
-                    <th>状态</th>
+                    <th  class="col-narrow">派送方式</th>
+                    <th class="col-narrow">扣放货</th>
+                    <th class="col-narrow">状态</th>
                     <th>备注</th>
                 </tr>
                 </thead>
@@ -127,7 +127,7 @@
 
                     <td>
                         <input type="text" class="form-control form-control-sm"
-                               name="size_{{row.sub_id}}" value="{{ row.size or '' }}">
+                               name="cargo_{{row.sub_id}}" value="{{ row.cargo or '' }}">
                     </td>
 
                     <td class="col-narrow">
@@ -160,10 +160,14 @@
                     </td>
 
                     <td>
-                        <select class="form-select form-select-sm"
-                                name="hold_{{row.sub_id}}">
-                            <option value="国内扣货" {% if row.hold=='国内扣货' %}selected{% endif %}>国内扣货</option>
-                            <option value="国内放货" {% if row.hold=='国内放货' %}selected{% endif %}>国内放货</option>
+                        <select class="form-select form-select-sm hold-select
+                            {% if row.hold == '放货' %}text-bg-success
+                            {% elif row.hold == '扣货' %}bg-danger text-white
+                            {% endif %}"
+                            name="hold_{{ row.sub_id }}">
+
+                            <option value="扣货" {% if row.hold=='扣货' %}selected{% endif %}>扣货</option>
+                            <option value="放货" {% if row.hold=='放货' %}selected{% endif %}>放货</option>
                         </select>
                     </td>
 
