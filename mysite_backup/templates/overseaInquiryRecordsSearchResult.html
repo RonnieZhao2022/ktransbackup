@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>国内邮件询价记录查询结果</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+     <style>
+        .bs-example{
+            margin: 20px;
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+    <h4 class = "text-center my-5">根据您输入的查询信息，结果如下：</h4>
+
+</div>
+
+ {% if shipping_type == 'FCL' %}
+            <div class="container">
+
+
+
+
+                            <div id="accordion3">
+
+                              {%  for record in myreslut %}
+                              <div class="card">
+                                <div class="card-header">
+                                  <a class="card-link" data-toggle="collapse" data-parent="#accordion3" href="#collapse{{record[0]}}">
+                                                 {{record[0]}}&nbsp; <strong>{{record[1]}}</strong>&nbsp;From：<strong>{{record[5]}}</strong>&nbsp;&nbsp;To：<strong>{{record[8]}}&nbsp;{{record[13]}}</strong>&nbsp;{{record[9]}} &nbsp;skids &nbsp;<strong>询价日期：</strong>{{record[21]}}
+                                            </a>
+                                </div>
+                                <div id="collapse{{record[0]}}" class="collapse">
+                                    <div class="card-body">
+
+
+                                        <div class="shadow-lg p-3 mb-5 bg-white rounded">
+                                            <p><strong>address：{{record[11]}}&nbsp;{{record[8]}}&nbsp;{{record[7]}}&nbsp;{{record[6]}}&nbsp;{{record[12]}}</strong></p>
+                                            <p>货物信息：{{record[9]}}&nbsp;;{{record[10]}}</p>
+                                            <p>货柜类型：{{record[13]}};&nbsp;重量：{{record[14]}}磅;&nbsp; 体积：{{record[15]}}立方米 </p>
+                                            <p>{{record[16]}} ADDRESS&nbsp;&nbsp;特殊要求：{{record[21]}}</p>
+                                            <p>底价：{{record[17]}}&nbsp;我司报价：{{record[18]}}&nbsp;成交日期：{{record[19]}}&nbsp;<b>是否已询价：{{record[20]}}</b></p>
+                                            <p><a href="/inquiryMailToTruckersFCL/{{record[0]}}/"  target="_blank">群发询价</a>&nbsp;&nbsp;<a href="/overseaInquiryRecordchange/{{record[0]}}FCL/"  target="_blank">局部修改</a></p>
+
+
+
+                                        </div>
+
+
+
+                                    </div>
+                                </div>
+                              </div>
+                              {% endfor  %}
+
+                          </div>
+
+                </div>
+{% else %}
+
+            <div class="container">
+
+                <div id="accordion7">
+
+                                          {%  for record in myreslut %}
+                                          <div class="card">
+                                            <div class="card-header">
+                                              <a class="card-link" data-toggle="collapse" data-parent="#accordion7" href="#collapse{{record[0]}}">
+                                                            {{record[0]}}&nbsp;<strong>{{record[1]}}</strong>&nbsp;From:&nbsp;<strong>{{record[5]}}</strong>&nbsp;To:&nbsp;<strong>{{record[8]}}</strong>&nbsp;<strong>{{record[12]}}</strong>&nbsp;skids &nbsp;{{record[9]}} &nbsp;&nbsp;<strong>{{record[27]}}</strong>&nbsp; &nbsp;{{record[21]}}&nbsp;skids &nbsp;<strong>询价日期：</strong>{{record[29]}}
+                                                        </a>
+                                            </div>
+                                            <div id="collapse{{record[0]}}" class="collapse">
+                                                <div class="card-body">
+
+
+                                                    <div class="shadow-lg p-3 mb-5 bg-white rounded">
+
+
+                                                        <p><strong>Address：{{record[17]}}&nbsp;{{record[8]}}&nbsp;{{record[7]}}&nbsp;{{record[6]}}&nbsp;{{record[18]}}</strong></p>
+                                                        <p>货物信息：{{record[9]}}&nbsp;{{record[10]}}&nbsp;{{record[11]}}</p>
+                                                        <p>货物板数：{{record[12]}};&nbsp;&nbsp;超尺寸板数：{{record[13]}};&nbsp;&nbsp;超重板数：{{record[14]}};&nbsp;&nbsp;重量：{{record[19]}}磅;&nbsp;&nbsp; 体积：{{record[20]}}立方米 </p>
+                                                        <p>具体尺寸如下：</p>
+
+                                                        <p>{{record[16]}}</p>
+
+                                                        <p>{{record[22]}} ADDRESS&nbsp;派送类型：{{record[27]}}&nbsp;派送要求：{{record[21]}}</p>
+                                                        <p>底价：{{record[23]}}&nbsp;我司报价：{{record[24]}}&nbsp;成交日期：{{record[25]}}&nbsp;<b>是否已询价：{{record[28]}}</b></p>
+                                                        <p><a href="/inquiryMailToTruckersLTL/{{record[0]}}/"  target="_blank">群发询价</a>&nbsp;&nbsp;<a href="/overseaInquiryRecordchange/{{record[0]}}LTL/"  target="_blank">局部修改</a></p>
+
+
+
+                                                    </div>
+
+
+
+                                                </div>
+                                            </div>
+                                          </div>
+                                          {% endfor  %}
+
+                                      </div>
+
+
+            </div>
+
+
+
+
+
+ {% endif  %}
+
+
+</body>
+</html>

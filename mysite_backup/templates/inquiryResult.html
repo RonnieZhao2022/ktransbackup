@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>查询结果</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<body>
+
+
+    <div class = "container p-2 mx-auto" >
+
+        <h3 class="text-conter">Dear 您这票运费的查询结果如下：</h3>
+
+
+
+    </div>
+
+<div class="container">
+        <div >
+            <p>查询信息：</p>
+            <table class="table" style="font-size:15px;white-space:nowrap">
+
+                  <thead>
+                    <tr>
+                        <th scope="col"  style="background-color:lightblue">托盘数</th>
+                        <th scope="col"  style="background-color:lightblue">公斤重量</th>
+                        <th scope="col"  style="background-color:lightblue">货物尺寸</th>
+                        <th scope="col"  style="background-color:lightblue">派送地址</th>
+                        <th scope="col"  style="background-color:lightblue">邮政编码</th>
+                        <th scope="col"  style="background-color:lightblue">派送方式</th>
+                        <th scope="col"  style="background-color:lightblue">是否民居</th>
+                        <th scope="col"  style="background-color:lightblue">目的地城市</th>
+                        <th scope="col"  style="background-color:lightblue">zone</th>
+                        <th scope="col"  style="background-color:lightblue">所属区域</th>
+
+
+                    </tr>
+                  </thead>
+
+
+                  <tbody>
+
+
+
+
+                    <tr>
+                        <td class="text-truncate">{{list[0]}}</td>
+                        <td class="text-truncate">{{list[1]}}</td>
+                        <td class="text-truncate">{{list[2]}}</td>
+                        <td class="text-truncate">{{list[3]}}</td>
+                        <td class="text-truncate">{{list[4]}}</td>
+                        <td class="text-truncate">{{list[5]}}</td>
+                        <td class="text-truncate">{{list[6]}}</td>
+                        <td class="text-truncate">{{list[7]}}</td>
+                        <td class="text-truncate">{{list[8]}}</td>
+                        <td class="text-truncate">{{list[9]}}</td>
+
+                    </tr>
+
+
+                  </tbody>
+
+
+
+
+
+            </table>
+
+            <p>费用明细如下：</p>
+            <p>派送费：{{list[10]}};  尾板费：{{list[11]}};  住宅派送费：{{list[12]}};  总计：CAD<strong>{{list[10]  + list[11]  + list[12]}}</strong>;</p>
+            <p>这票的详细资料及报价已经发送至贵司邮箱,敬请查收</p>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+</body>
+</html>

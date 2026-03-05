@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>新单录入</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .card-header { cursor: pointer; }
+        .remove-btn { margin-top: 0; }
+    </style>
+</head>
+<body>
+<div class="container p-2 mx-auto">
+    <h3 class="text-center">KTrans新单录入</h3>
+</div>
+
+<div class="container mb-5">
+    <form method="post" enctype="multipart/form-data">
+
+        <!-- 单号信息 -->
+        <div class="shadow-lg p-3 mb-5 bg-white rounded">
+            <div class="form-row">
+                <div class="form-group col-md-3">
+                    <label for="order_id" class="form-label">单号(*必填*)</label>
+                    <input type="text" required class="form-control" id="order_id" name="order_id" pattern="[TVL][\d]{6}">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="operator" class="form-label">operator</label>
+                    <select id="operator" name="operator" class="form-control">
+                        <option selected value="4">tor3</option>
+                        {% for i in operatorList %}
+                        <option value="{{i[0]}}">{{i[1]}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="freight_type" class="form-label">货运类型</label>
+                    <select id="freight_type" name="freight_type" class="form-control">
+                        <option selected></option>
+                        <option>散货</option>
+                        <option>整柜</option>
+                        <option>拼柜</option>
+                        <option>拆派FBA</option>
+                        <option>多柜</option>
+                        <option>换单</option>
+                        <option>未知</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="bln" class="form-label">Bill of landing number</label>
+                    <input type="text" class="form-control" id="bln" name="bln">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="ssl_info" class="form-label">船公司名称</label>
+                    <select id="ssl_info" name="ssl_info" class="form-control" required>
+                        <option selected>未知</option>
+                        {% for i in sslList %}
+                        <option>{{i[0]}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="vessel_name" class="form-label">托运船名</label>
+                    <input type="text" class="form-control" id="vessel_name" name="vessel_name">
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="origin_city" class="form-label">出发地</label>
+                    <input list="origin_cityList" id="origin_city" name="origin_city" class="form-control">
+                    <datalist id="origin_cityList">
+                        {% for i in origin_cityList %}
+                        <option value="{{i[0]}}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="dest_city" class="form-label">目的地</label>
+                    <input list="dest_cityList" id="dest_city" name="dest_city" class="form-control" required>
+                    <datalist id="dest_cityList">
+                        {% for i in dest_cityList %}
+                        <option value="{{i[0]}}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="oversea" class="form-label">发货方(*必填*)</label>
+                    <select id="oversea" name="oversea" class="form-control" required>
+                        <option selected></option>
+                        {% for i in overseaList %}
+                        <option value="{{i[0]}}">{{i[1]}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-3">
+                    <label for="coloader" class="form-label">上家(*必填*)</label>
+                    <select id="coloader" name="coloader" class="form-control" required>
+                        <option selected></option>
+                        {% for i in coloaderList %}
+                        <option value="{{i[0]}}">{{i[1]}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="warehouse" class="form-label">海关仓库(*必填*)</label>
+                    <select id="warehouse" name="warehouse" class="form-control" required>
+                        <option selected></option>
+                        {% for i in warehouseList %}
+                        <option value="{{i[0]}}">{{i[1]}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <label for="onboard_date" class="form-label">onboarddate</label>
+                    <input type="text" class="form-control" id="onboard_date" name="onboard_date">
+                </div>
+            </div>
+        </div>
+
+        <!-- 货柜信息折叠 -->
+        <div id="containerSection">
+            <h5>🟦 货柜信息 <button type="button" id="addContainerBtn" class="btn btn-sm btn-success" style="display:none;">新增货柜</button></h5>
+            <div id="containerList"></div>
+        </div>
+
+        <!-- 货物信息折叠 -->
+        <div id="cargoSection">
+            <h5>🟩 货物信息 <button type="button" id="addCargoBtn" class="btn btn-sm btn-success" style="display:none;">新增货物</button></h5>
+            <div id="cargoList"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">提交</button>
+    </form>
+</div>
+
+<script>
+var containerCount = 0;
+var cargoCount = 0;
+
+function createContainerCard(index, order_id_val, section_val){
+    return $(`
+    <div class="card mb-2" id="containerCard${index}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="collapse-toggle" data-target="#containerBody${index}">货柜信息 ${section_val || ''}</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeContainer(${index})">删除</button>
+        </div>
+        <div class="collapse show" id="containerBody${index}">
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group col-md-3"><label>所属单号</label><input type="text" class="form-control" name="container_info-order_id" value="${order_id_val}" readonly></div>
+                    <div class="form-group col-md-3"><label>分单号(*必填*)</label><input type="text" class="form-control" name="container_info-section" value="${section_val || ''}" pattern="^$|^[A-Z]$" required></div>
+                    <div class="form-group col-md-3"><label>货运种类</label><select name="shipping_type" class="form-control"><option></option><option>LCL</option><option>20FT</option><option>40OT</option><option>40HQ</option><option>40FT</option><option>40RF</option><option>40FR</option></select></div>
+                    <div class="form-group col-md-3"><label>货柜号(*必填*)</label><input type="text" class="form-control" name="container_number" required pattern="[A-Z]{4}\\d{7}"></div>
+                    <div class="form-group col-md-3"><label>货柜信息备注</label><textarea class="form-control" name="container_info_remark" rows="3"></textarea></div>
+                    <div class="form-group col-md-3"><label>货物种类</label><input type="text" class="form-control" name="cargo_type"></div>
+                    <div class="form-group col-md-3"><label>货物数量</label><input type="text" class="form-control" name="amount"></div>
+                    <div class="form-group col-md-3"><label>货物重量</label><input type="text" class="form-control" name="weight"></div>
+                    <div class="form-group col-md-3"><label>货物体积</label><input type="text" class="form-control" name="volume"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `);
+}
+
+function createCargoCard(index, order_id_val, section_val){
+    return $(`
+    <div class="card mb-2" id="cargoCard${index}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="collapse-toggle" data-target="#cargoBody${index}">货物信息 ${section_val || ''}</span>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeCargo(${index})">删除</button>
+        </div>
+        <div class="collapse show" id="cargoBody${index}">
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group col-md-3"><label>所属单号</label><input type="text" class="form-control" name="cargo_info-order_id" value="${order_id_val}" readonly></div>
+                    <div class="form-group col-md-3"><label>分单号(*必填*)</label><input type="text" class="form-control" name="cargo_info-section" value="${section_val || ''}" pattern="^$|^[A-Z]$" required></div>
+                    <div class="form-group col-md-3"><label>唛头</label><input type="text" class="form-control" name="mark"></div>
+                    <div class="form-group col-md-3"><label>货物信息备注</label><textarea class="form-control" name="cargo_info_remark" rows="3"></textarea></div>
+                    <div class="form-group col-md-3"><label>老顾客</label><select name="regular_client" class="form-control"><option selected></option><option>是</option><option>否</option></select></div>
+                    <div class="form-group col-md-3"><label>是否扣货</label><select name="hold" class="form-control"><option selected></option><option>暂时扣货</option><option>国内放货</option><option>我司扣货</option><option>欠款扣货</option><option>未知</option></select></div>
+                    <div class="form-group col-md-3"><label>服务类型</label><select name="service_type" class="form-control"><option selected></option><option>换单</option><option>清关派送</option><option>只送货</option><option>只清关</option><option>未知</option></select></div>
+                    <div class="form-group col-md-3"><label>货物种类</label><input type="text" class="form-control" name="cargo_info_cargo_type"></div>
+                    <div class="form-group col-md-3"><label>货物数量</label><input type="text" class="form-control" name="cargo_info_amount"></div>
+                    <div class="form-group col-md-3"><label>货物重量</label><input type="text" class="form-control" name="cargo_info_weight"></div>
+                    <div class="form-group col-md-3"><label>货物体积</label><input type="text" class="form-control" name="cargo_info_volume"></div>
+                    <div class="form-group col-md-6"><label>长宽高</label><input type="text" class="form-control" name="size" placeholder="cm, mm 或 IN"></div>
+                    <div class="form-group col-md-3">
+                        <label>清关方式(*必填*)</label>
+                        <select name="broker" class="form-control" required>
+                            <option value="" selected></option>
+                            {% for i in brokerList %}
+                            <option value="{{i[0]}}">{{i[1]}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                     <div class="form-group col-md-3"><label>收货人</label><input type="text" class="form-control" name="client"></div>
+                    <div class="form-group col-md-3"><label>公司名称</label><input type="text" class="form-control" name="company"></div>
+                    <div class="form-group col-md-3"><label>收货人电话</label><input type="text" class="form-control" name="phone"></div>
+                    <div class="form-group col-md-6"><label>收货人电邮</label><input type="text" class="form-control" name="email"></div>
+                    <div class="form-group col-md-6"><label>收货人地址</label><input type="text" class="form-control" name="address"></div>
+                    <div class="form-group col-md-4"><label>派送方式</label><select name="delivery_type" class="form-control"><option selected></option><option>DOCK TO DOCK</option><option>TAILGATE</option><option>FORKLIFT</option><option>FLATBED</option><option>搬运入户</option><option>未知</option><option>自提</option><option>LIVE UNLOAD</option><option>DROP OFF</option><option>HAND BOMBING</option><option>多个地址</option><option>整柜</option></select></div>
+                    <div class="form-group col-md-4"><label>CCN</label><input type="text" class="form-control" name="ccn"></div>
+                    <div class="form-group col-md-4"><label>OLD CCN</label><input type="text" class="form-control" name="old_ccn"></div>
+                    <div class="form-group col-md-4"><label>付费方式</label><select name="payment_methods" class="form-control"><option selected></option><option>DDU</option><option>DDP</option><option>DAP</option><option>ALL ON CLIENT</option><option>DDP不包GST</option><option>未知</option></select></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    `);
+}
+
+// 删除和更新函数保持不变
+function removeContainer(index){ $(`#containerCard${index}`).remove(); updateContainerSections(); }
+function removeCargo(index){ $(`#cargoCard${index}`).remove(); updateCargoSections(); }
+
+function updateContainerSections(){ $('#containerList .card').each(function(i){ var input=$(this).find('input[name="container_info-section"]'); input.val(i===0&&$('#containerList .card').length===1?'':String.fromCharCode(65+i)); $(this).find('.collapse-toggle').text('货柜信息 '+input.val()); }); }
+function updateCargoSections(){ $('#cargoList .card').each(function(i){ var input=$(this).find('input[name="cargo_info-section"]'); input.val(i===0&&$('#cargoList .card').length===1?'':String.fromCharCode(65+i)); $(this).find('.collapse-toggle').text('货物信息 '+input.val()); }); }
+
+$(document).on('click','.collapse-toggle',function(){ $($(this).data('target')).collapse('toggle'); });
+
+$(document).ready(function(){
+    var order_id_val=$('#order_id').val();
+    $('#order_id').on('input',function(){ order_id_val=$(this).val(); $('#containerList input[name="container_info-order_id"]').val(order_id_val); $('#cargoList input[name="cargo_info-order_id"]').val(order_id_val); });
+
+    containerCount=1; cargoCount=1;
+    $('#containerList').append(createContainerCard(containerCount, order_id_val,''));
+    $('#cargoList').append(createCargoCard(cargoCount, order_id_val,''));
+    updateContainerSections(); updateCargoSections();
+
+    $('#freight_type').change(function(){ var val=$(this).val(); $('#addContainerBtn').toggle(val==='多柜'); $('#addCargoBtn').toggle(val==='拼柜'); });
+    $('#addContainerBtn').click(function(){ containerCount++; var section_val=String.fromCharCode(65+containerCount-1); $('#containerList').append(createContainerCard(containerCount,order_id_val,section_val)); updateContainerSections(); });
+    $('#addCargoBtn').click(function(){ cargoCount++; var section_val=String.fromCharCode(65+cargoCount-1); $('#cargoList').append(createCargoCard(cargoCount,order_id_val,section_val)); updateCargoSections(); });
+});
+</script>
+</body>
+</html>

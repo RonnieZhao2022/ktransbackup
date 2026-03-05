@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POD 多文件上传</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+#drop_zone {
+    border: 2px dashed #888; border-radius: 10px; padding: 40px; text-align: center;
+    color: #555; margin-bottom: 10px; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+#drop_zone.hover { border-color: #33a; color: #33a; }
+.file-list { margin-top: 10px; }
+.file-item { display: flex; align-items: center; margin-bottom: 10px; }
+.file-item img { width: 80px; height: 80px; object-fit: cover; margin-right: 10px; border: 1px solid #ccc; border-radius: 5px; }
+.file-item .file-info { flex: 1; }
+.progress-bar { height: 10px; background-color: #33a; width: 0%; border-radius: 5px; margin-top: 5px; }
+button { padding: 8px 16px; font-size: 16px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h2>POD 多文件上传</h2>
+
+<div id="drop_zone">拖拽文件到这里，或点击选择文件（支持多文件，包括邮件附件）</div>
+<input type="file" id="file_input" accept="image/*,application/pdf" multiple capture="environment" style="display:none;">
+<div class="file-list" id="file_list"></div>
+<button id="upload_btn" disabled>上传文件</button>
+<div id="result"></div>
+
+<script>
+const dropZone = document.getElementById('drop_zone');
+const fileInput = document.getElementById('file_input');
+const fileListDiv = document.getElementById('file_list');
+const uploadBtn = document.getElementById('upload_btn');
+const resultDiv = document.getElementById('result');
+
+let selectedFiles = [];
+
+// 从 URL 获取 cargo_id
+let urlParts = window.location.pathname.split('/');
+let cargo_id = urlParts[urlParts.length - 2]; // /phone_upload_pod/<cargo_id>/
+
+// 点击拖拽区打开文件选择
+dropZone.addEventListener('click', () => fileInput.click());
+
+// 拖拽事件
+dropZone.addEventListener('dragenter', e => e.preventDefault());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
+dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('hover'); });
+
+// drop 事件，兼容邮件附件拖拽
+dropZone.addEventListener('drop', async e => {
+    e.preventDefault();
+    dropZone.classList.remove('hover');
+
+    let files = [];
+
+    // 普通文件拖拽
+    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+        files = Array.from(e.dataTransfer.files);
+    } 
+    // 邮件附件或特殊拖拽
+    else if (e.dataTransfer.items && e.dataTransfer.items.length) {
+        for (let i = 0; i < e.dataTransfer.items.length; i++) {
+            const item = e.dataTransfer.items[i];
+            if (item.kind === 'file') {
+                const file = item.getAsFile();
+                if (file) files.push(file);
+            }
+        }
+    }
+
+    if (files.length > 0) {
+        handleFiles(files);
+    } else {
+        alert('无法识别拖拽内容，请尝试点击选择文件上传');
+    }
+});
+
+// 文件选择事件
+fileInput.addEventListener('change', e => {
+    if (e.target.files.length) handleFiles(e.target.files);
+});
+
+// 粘贴截图上传
+document.addEventListener('paste', e => {
+    const items = e.clipboardData.items;
+    for (let i=0; i<items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file') {
+            handleFiles([item.getAsFile()]);
+        }
+    }
+});
+
+// 处理文件
+function handleFiles(files) {
+    const allowed = ['jpg','jpeg','png','pdf'];
+    for (let file of files) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!allowed.includes(ext)) {
+            alert('只允许上传 JPG/PNG/PDF 文件: ' + file.name);
+            continue;
+        }
+        selectedFiles.push(file);
+        displayFile(file);
+    }
+    uploadBtn.disabled = selectedFiles.length === 0;
+}
+
+// 显示文件缩略图或 PDF 文件名
+function displayFile(file) {
+    const index = selectedFiles.indexOf(file);
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'file-item';
+    
+    const preview = document.createElement('div');
+    if (file.type === 'application/pdf') {
+        preview.textContent = 'PDF 文件';
+        preview.style.width = '80px';
+        preview.style.height = '80px';
+        preview.style.display = 'flex';
+        preview.style.alignItems = 'center';
+        preview.style.justifyContent = 'center';
+        preview.style.border = '1px solid #ccc';
+        preview.style.borderRadius = '5px';
+        preview.style.backgroundColor = '#f0f0f0';
+        preview.style.marginRight = '10px';
+    } else {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        preview.appendChild(img);
+    }
+    
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'file-info';
+    infoDiv.innerHTML = `<div>${file.name}</div><div class="progress-bar" id="progress_${index}"></div>`;
+    
+    itemDiv.appendChild(preview);
+    itemDiv.appendChild(infoDiv);
+    fileListDiv.appendChild(itemDiv);
+}
+
+// 上传按钮点击
+uploadBtn.addEventListener('click', () => {
+    if (selectedFiles.length === 0) return;
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = '上传中...';
+
+    selectedFiles.forEach((file, index) => {
+        const formData = new FormData();
+        formData.append('pod_photo', file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `/phone_upload_pod/${cargo_id}/`, true);
+
+        xhr.upload.addEventListener('progress', e => {
+            if (e.lengthComputable) {
+                const percent = (e.loaded / e.total) * 100;
+                const progressBar = document.getElementById(`progress_${index}`);
+                if (progressBar) progressBar.style.width = percent + '%';
+            }
+        });
+
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    resultDiv.innerHTML += `<div>${file.name} 上传成功</div>`;
+                } else {
+                    resultDiv.innerHTML += `<div style="color:red">${file.name} 上传失败</div>`;
+                }
+            }
+        };
+
+        xhr.send(formData);
+    });
+
+    // 清空文件列表
+    selectedFiles = [];
+    fileListDiv.innerHTML = '';
+    uploadBtn.textContent = '上传文件';
+});
+</script>
+
+</body>
+</html>

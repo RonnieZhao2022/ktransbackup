@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>FBA 入仓管理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container-fluid mt-3">
+<h4 class="mb-3">FBA 入仓管理</h4>
+
+<form method="POST">
+
+<!-- 入仓时间输入和提交按钮 -->
+<div class="mb-3">
+    <div class="row align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">入仓时间</label>
+            <input type="date" name="inbound_date" class="form-control" required>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary mt-2">
+                批量更新选中货物
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 仓库分页标签 -->
+<ul class="nav nav-tabs mb-3" id="warehouseTabs">
+{% for warehouse in warehouse_data.keys() %}
+<li class="nav-item">
+    <button class="nav-link {% if loop.first %}active{% endif %}"
+            data-bs-toggle="tab"
+            data-bs-target="#tab{{ loop.index }}">
+        {{ warehouse }}
+    </button>
+</li>
+{% endfor %}
+</ul>
+
+<div class="tab-content">
+{% for warehouse, cargo_list in warehouse_data.items() %}
+<div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="tab{{ loop.index }}">
+
+<!-- 仓库全选按钮 -->
+<div class="mb-2">
+    <button type="button" class="btn btn-sm btn-outline-primary"
+            onclick="toggleWarehouse('warehouse{{ loop.index }}')">
+        全选本仓库
+    </button>
+</div>
+
+{% for cargo in cargo_list %}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center bg-light">
+        <div><strong>{{ cargo.cargo_id }}</strong></div>
+        <div class="small text-muted">
+            总板数: {{ cargo.shipments[0].total_pallets or 0 }} |
+            备注: {{ cargo.shipments[0].remark }} |
+            国内指示: {{ cargo.shipments[0].cn_instruction }}
+        </div>
+        <div>
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    onclick="toggleCargo('{{ cargo.group_id }}')">
+                全选本票
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+    <table class="table table-bordered table-sm align-middle mb-0">
+        <thead class="table-light">
+        <tr>
+            <th style="width:40px;"></th>
+            <th>Shipment</th>
+            <th>Mark</th>
+            <th>板</th>
+            <th>箱</th>
+            <th>件</th>
+            <th>PO</th>
+            <th>状态</th>
+            <th>Book</th>
+            <th>送仓</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for row in cargo.shipments %}
+        <tr {% if row.inbound_date %}class="table-secondary"{% endif %}>
+            <td>
+                <input type="checkbox"
+                       class="cargo-checkbox group{{ cargo.group_id }} warehouse{{ loop.parentloop_index|default(loop.index0) }}"
+                       name="selected_items"
+                       value="{{ row.shipment_id }}">
+            </td>
+            <td>{{ row.shipment_id }}</td>
+            <td>{{ row.mark }}</td>
+            <td>{{ row.pallets }}</td>
+            <td>{{ row.cartons }}</td>
+            <td>{{ row.pieces }}</td>
+            <td>{{ row.po_list }}</td>
+            <td>
+                <span class="badge {% if row.status == '在仓库' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                    {{ row.status }}
+                </span>
+            </td>
+            <td>{{ row.book_date }}</td>
+            <td>{{ row.inbound_date or '' }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endfor %}
+
+</div>
+{% endfor %}
+</div>
+</form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// 全选本票
+function toggleCargo(groupId){
+    let checkboxes = document.querySelectorAll(".group"+groupId);
+    let allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+}
+
+// 全选仓库
+function toggleWarehouse(warehouseClass){
+    let checkboxes = document.querySelectorAll("."+warehouseClass);
+    let allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+}
+</script>
+
+</body>
+</html>

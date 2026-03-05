@@ -3,30 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POD 多文件上传</title>
+<title>POD 文件上传</title>
+
 <style>
 body { font-family: Arial, sans-serif; padding: 20px; }
+
 #drop_zone {
-    border: 2px dashed #888; border-radius: 10px; padding: 40px; text-align: center;
-    color: #555; margin-bottom: 10px; cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
+    border: 2px dashed #888;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    color: #555;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: 0.2s;
 }
-#drop_zone.hover { border-color: #33a; color: #33a; }
-.file-list { margin-top: 10px; }
-.file-item { display: flex; align-items: center; margin-bottom: 10px; }
-.file-item img { width: 80px; height: 80px; object-fit: cover; margin-right: 10px; border: 1px solid #ccc; border-radius: 5px; }
-.file-item .file-info { flex: 1; }
-.progress-bar { height: 10px; background-color: #33a; width: 0%; border-radius: 5px; margin-top: 5px; }
-button { padding: 8px 16px; font-size: 16px; margin-top: 10px; }
+#drop_zone.hover { border-color: #3366cc; color: #3366cc; }
+
+.file-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.file-item img {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.file-info { flex: 1; }
+
+.progress-bar {
+    height: 6px;
+    background: #3366cc;
+    width: 0%;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+select, button {
+    padding: 8px 12px;
+    font-size: 15px;
+    margin-top: 10px;
+}
+
+#result { margin-top: 15px; }
+.success { color: green; }
+.error { color: red; }
 </style>
 </head>
+
 <body>
 
-<h2>POD 多文件上传</h2>
+<h2>POD 文件上传</h2>
 
-<div id="drop_zone">拖拽文件到这里，或点击选择文件（支持多文件，包括邮件附件）</div>
-<input type="file" id="file_input" accept="image/*,application/pdf" multiple capture="environment" style="display:none;">
-<div class="file-list" id="file_list"></div>
+<div>
+    <label>文件类型：</label>
+    <select id="doc_type">
+        <option value="HBL">HBL</option>
+        <option value="EMNFT">EMNFT</option>
+        <option value="YYZ1_POD">YYZ1_POD</option>
+        <option value="YYZ2_POD">YYZ2_POD</option>
+        <option value="YYZ3_POD">YYZ3_POD</option>
+        <option value="YYZ4_POD">YYZ4_POD</option>
+        <option value="YYZ5_POD">YYZ5_POD</option>
+        <option value="YYZ6_POD">YYZ6_POD</option>
+        <option value="YYZ7_POD">YYZ7_POD</option>
+        <option value="YYZ8_POD">YYZ8_POD</option>
+        <option value="YYZ9_POD">YYZ9_POD</option>
+        <option value="YXU1_POD">YXU1_POD</option>
+        <option value="YHM1_POD">YHM1_POD</option>
+        <option value="YOW1_POD">YOW1_POD</option>
+        <option value="YOW3_POD">YOW3_POD</option>
+    </select>
+</div>
+
+<div id="drop_zone">拖拽文件到这里，或点击选择文件，或直接 Ctrl+V 粘贴截图</div>
+<input type="file" id="file_input" accept="image/*,application/pdf" multiple style="display:none;">
+<div id="file_list"></div>
+
 <button id="upload_btn" disabled>上传文件</button>
 <div id="result"></div>
 
@@ -39,59 +98,54 @@ const resultDiv = document.getElementById('result');
 
 let selectedFiles = [];
 
-// 从 URL 获取 cargo_id
+// 获取 cargo_id
 let urlParts = window.location.pathname.split('/');
-let cargo_id = urlParts[urlParts.length - 2]; // /phone_upload_pod/<cargo_id>/
+let cargo_id = urlParts[urlParts.length - 2];
 
-// 点击拖拽区打开文件选择
+// 点击打开文件选择
 dropZone.addEventListener('click', () => fileInput.click());
 
-// 拖拽事件
-dropZone.addEventListener('dragenter', e => e.preventDefault());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
-dropZone.addEventListener('dragleave', e => { e.preventDefault(); dropZone.classList.remove('hover'); });
-
-// drop 事件，兼容邮件附件拖拽
-dropZone.addEventListener('drop', async e => {
-    e.preventDefault();
-    dropZone.classList.remove('hover');
-
-    let files = [];
-
-    // 普通文件拖拽
-    if (e.dataTransfer.files && e.dataTransfer.files.length) {
-        files = Array.from(e.dataTransfer.files);
-    } 
-    // 邮件附件或特殊拖拽
-    else if (e.dataTransfer.items && e.dataTransfer.items.length) {
-        for (let i = 0; i < e.dataTransfer.items.length; i++) {
-            const item = e.dataTransfer.items[i];
-            if (item.kind === 'file') {
-                const file = item.getAsFile();
-                if (file) files.push(file);
-            }
-        }
-    }
-
-    if (files.length > 0) {
-        handleFiles(files);
-    } else {
-        alert('无法识别拖拽内容，请尝试点击选择文件上传');
-    }
-});
-
-// 文件选择事件
+// 文件选择
 fileInput.addEventListener('change', e => {
     if (e.target.files.length) handleFiles(e.target.files);
 });
 
-// 粘贴截图上传
-document.addEventListener('paste', e => {
+// 拖拽支持
+dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('hover');
+});
+dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('hover');
+});
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('hover');
+    handleFiles(e.dataTransfer.files);
+});
+
+// 粘贴支持（支持邮件截图）
+document.addEventListener('paste', function (e) {
     const items = e.clipboardData.items;
-    for (let i=0; i<items.length; i++) {
-        const item = items[i];
-        if (item.kind === 'file') {
-            handleFiles([item.getAsFile()]);
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].kind === 'file') {
+            const file = items[i].getAsFile();
+            if (file) handleFiles([file]);
+        }
+        if (items[i].type.indexOf('text/html') !== -1) {
+            items[i].getAsString(function (html) {
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                const img = div.querySelector('img');
+                if (img && img.src.startsWith('data:image')) {
+                    fetch(img.src)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const file = new File([blob], "pasted.png", { type: blob.type });
+                            handleFiles([file]);
+                        });
+                }
+            });
         }
     }
 });
@@ -99,60 +153,66 @@ document.addEventListener('paste', e => {
 // 处理文件
 function handleFiles(files) {
     const allowed = ['jpg','jpeg','png','pdf'];
+
     for (let file of files) {
         const ext = file.name.split('.').pop().toLowerCase();
         if (!allowed.includes(ext)) {
-            alert('只允许上传 JPG/PNG/PDF 文件: ' + file.name);
+            alert('只允许 JPG/PNG/PDF 文件');
             continue;
         }
         selectedFiles.push(file);
         displayFile(file);
     }
+
     uploadBtn.disabled = selectedFiles.length === 0;
 }
 
-// 显示文件缩略图或 PDF 文件名
+// 显示文件
 function displayFile(file) {
-    const index = selectedFiles.indexOf(file);
+    const index = selectedFiles.length - 1;
+
     const itemDiv = document.createElement('div');
     itemDiv.className = 'file-item';
-    
+
     const preview = document.createElement('div');
+
     if (file.type === 'application/pdf') {
-        preview.textContent = 'PDF 文件';
-        preview.style.width = '80px';
-        preview.style.height = '80px';
-        preview.style.display = 'flex';
-        preview.style.alignItems = 'center';
-        preview.style.justifyContent = 'center';
-        preview.style.border = '1px solid #ccc';
-        preview.style.borderRadius = '5px';
-        preview.style.backgroundColor = '#f0f0f0';
-        preview.style.marginRight = '10px';
+        preview.textContent = 'PDF';
+        preview.style.width = '70px';
+        preview.style.textAlign = 'center';
     } else {
         const img = document.createElement('img');
         img.src = URL.createObjectURL(file);
         preview.appendChild(img);
     }
-    
+
     const infoDiv = document.createElement('div');
     infoDiv.className = 'file-info';
-    infoDiv.innerHTML = `<div>${file.name}</div><div class="progress-bar" id="progress_${index}"></div>`;
-    
+    infoDiv.innerHTML = `
+        <div>准备上传</div>
+        <div class="progress-bar" id="progress_${index}"></div>
+    `;
+
     itemDiv.appendChild(preview);
     itemDiv.appendChild(infoDiv);
     fileListDiv.appendChild(itemDiv);
 }
 
-// 上传按钮点击
+// 上传
 uploadBtn.addEventListener('click', () => {
-    if (selectedFiles.length === 0) return;
+
+    const docType = document.getElementById('doc_type').value;
     uploadBtn.disabled = true;
     uploadBtn.textContent = '上传中...';
 
     selectedFiles.forEach((file, index) => {
+
+        const ext = file.name.split('.').pop();
+        const newName = `${cargo_id}_${docType}.${ext}`;
+        const newFile = new File([file], newName, { type: file.type });
+
         const formData = new FormData();
-        formData.append('pod_photo', file);
+        formData.append('pod_photo', newFile);
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `/phone_upload_pod/${cargo_id}/`, true);
@@ -160,25 +220,21 @@ uploadBtn.addEventListener('click', () => {
         xhr.upload.addEventListener('progress', e => {
             if (e.lengthComputable) {
                 const percent = (e.loaded / e.total) * 100;
-                const progressBar = document.getElementById(`progress_${index}`);
-                if (progressBar) progressBar.style.width = percent + '%';
+                document.getElementById(`progress_${index}`).style.width = percent + '%';
             }
         });
 
-        xhr.onreadystatechange = () => {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    resultDiv.innerHTML += `<div>${file.name} 上传成功</div>`;
-                } else {
-                    resultDiv.innerHTML += `<div style="color:red">${file.name} 上传失败</div>`;
-                }
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                resultDiv.innerHTML += `<div class="success">${newName} 上传成功</div>`;
+            } else {
+                resultDiv.innerHTML += `<div class="error">${newName} 上传失败</div>`;
             }
         };
 
         xhr.send(formData);
     });
 
-    // 清空文件列表
     selectedFiles = [];
     fileListDiv.innerHTML = '';
     uploadBtn.textContent = '上传文件';

@@ -3073,6 +3073,13 @@ def fba_edit():
     """
     onrailList = tools.queryMysql(sql, (72, 'ON RAIL'))
 
+    sql = """
+        SELECT Order_id, container_number, eta, remark
+        FROM Orders
+        WHERE oversea = %s AND status = %s order by eta
+    """
+    atseaList = tools.queryMysql(sql, (72, 'AT SEA'))
+
 
 
     result = {}
@@ -3082,7 +3089,7 @@ def fba_edit():
     SELECT DISTINCT
         f.cargo_id,
         o.container_number,
-        SUBSTRING(DATE_ADD(o.eta, INTERVAL 2 DAY), 6, 5) AS eta,
+        SUBSTRING(o.eta_to_client, 6, 5) AS e,
         o.status
     FROM FBA_orders f
     LEFT JOIN Orders o
@@ -3099,12 +3106,13 @@ def fba_edit():
             shipment_id,
             mark,
             pallets,
-            pieces,
+            cartons,
             po_list,
             FBA_warehouse,
-            Inbound_date,
+            book_date,
             remark,
-            book_date
+            Inbound_date
+
 
         FROM FBA_orders
         WHERE cargo_id = '{cargo_id}'
@@ -3120,7 +3128,7 @@ def fba_edit():
             "details": details
         }
 
-    return render_template("FBA_Edit.html", cargo_data=result, onrailList =onrailList )
+    return render_template("FBA_Edit.html", cargo_data=result, onrailList =onrailList, atseaList = atseaList )
 
 
 
@@ -3230,32 +3238,76 @@ def fba_generate():
     # =========================
     if request.method == 'POST':
         selected_ids = request.form.getlist('selected_items')
-        inbound_date = request.form.get('inbound_date')
 
-        if selected_ids and inbound_date:
-            format_strings = ','.join(['%s'] * len(selected_ids))
-            sql = f"""
-                UPDATE FBA_orders
-                SET inbound_date = %s
-                WHERE shipment_id IN ({format_strings})
-            """
-            cursor.execute(sql, [inbound_date] + selected_ids)
+        selected_datetime = request.form.get("selected_datetime")
+
+        update_type = request.form.get("update_type")
+
+
+        # 1️⃣ 更新订仓日期
+        if update_type == "booking":
+            if not selected_datetime:
+                flash("请选择日期时间")
+                return redirect(request.url)
+
+            sql = """
+            UPDATE FBA_orders
+            SET book_date = %s
+            WHERE id IN ({})
+            """.format(",".join(["%s"] * len(selected_ids)))
+
+            params = [selected_datetime] + selected_ids
+
+
+        # 2️⃣ 更新入仓日期
+        elif update_type == "inbound":
+            if not selected_datetime:
+                flash("请选择日期时间")
+                return redirect(request.url)
+
+            sql = """
+            UPDATE FBA_orders
+            SET inbound_date = %s
+            WHERE id IN ({})
+            """.format(",".join(["%s"] * len(selected_ids)))
+
+            params = [selected_datetime] + selected_ids
+
+
+        # 3️⃣ 更新板数（逐条读取每行输入）
+        elif update_type == "pallets":
+
+            for row_id in selected_ids:
+                pallets_value = request.form.get(f"pallets_{row_id}")
+
+                cursor.execute("""
+                    UPDATE FBA_orders
+                    SET pallets = %s
+                    WHERE id = %s
+                """, (pallets_value, row_id))
             conn.commit()
-            flash("入仓时间更新成功！")
+            flash("更新成功")
+            return redirect(request.url)
 
-        cursor.close()
-        conn.close()
-        return redirect(url_for('fba_generate'))
+
+
+        cursor.execute(sql, params)
+        conn.commit()
+        flash("更新成功")
+        return redirect(request.url)
+
 
     # =========================
     # GET：加载页面数据
     # =========================
     sql = """
     SELECT
+        f.id,
         f.shipment_id,
         f.cargo_id,
         f.FBA_warehouse,
         f.mark,
+        f.estimated_pallets,
         f.pallets,
         f.cartons,
         f.pieces,
@@ -3263,6 +3315,7 @@ def fba_generate():
         f.status,
         f.book_date,
         f.inbound_date,
+        f.remark,
         o.status AS order_status,
         s.pallets AS total_pallets,
         s.remark,
@@ -3291,6 +3344,7 @@ def fba_generate():
     for r in rows:
         warehouse = r['FBA_warehouse']
         cargo = r['cargo_id']
+        id = r['id']
         warehouse_data[warehouse][cargo].append(r)
 
     structured_data = {}
@@ -3301,6 +3355,7 @@ def fba_generate():
             structured_data[warehouse].append({
                 "cargo_id": cargo_id,
                 "group_id": group_id,
+                "id":id,
                 "shipments": shipments
             })
 
@@ -3343,27 +3398,20 @@ def phone_upload_pod(cargo_id):
     if ext not in ['jpg', 'jpeg', 'png', 'pdf']:
         return "只允许上传图片或 PDF 文件"
 
-    # 如果是图片，统一保存为 jpg
-    if ext in ['jpeg', 'png']:
-        ext = "jpg"
+
 
     # 构造基础文件名
-    base_filename = f"{cargo_id}_pod"
-    filename = f"{base_filename}.{ext}"
-    save_path = os.path.join(upload_folder, filename)
 
-    # 如果重名，自动编号
-    counter = 1
-    while os.path.exists(save_path):
-        filename = f"{base_filename}_{counter}.{ext}"
-        save_path = os.path.join(upload_folder, filename)
-        counter += 1
+
+    save_path = os.path.join(upload_folder, file.filename)
+
+
 
     # 保存文件
     file.save(save_path)
 
     # 生成访问URL
-    image_url = url_for('static', filename=f"pod/{cargo_id}/{filename}")
+    image_url = url_for('static', filename = file.filename)
 
     # 前端显示
     if ext == "pdf":

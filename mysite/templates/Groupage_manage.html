@@ -156,6 +156,8 @@
                             <option value="dock to dock" {% if (row.delivery_type or '未知')=='dock to dock' %}selected{% endif %}>dock to dock</option>
                             <option value="tailgate" {% if (row.delivery_type or '未知')=='tailgate' %}selected{% endif %}>tailgate</option>
                             <option value="未知" {% if (row.delivery_type or '未知')=='未知' %}selected{% endif %}>未知</option>
+                            <option value="自提" {% if (row.delivery_type or '未知')=='自提' %}selected{% endif %}>自提</option>
+
                         </select>
                     </td>
 

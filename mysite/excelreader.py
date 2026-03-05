@@ -137,6 +137,7 @@ def linkupreadexcel(path, cargo_id, filename):
             if pd.notna(row[2]) and 'FBA' in str(row[2]):
                 shipment_id = row[2]
                 mark = row[3] if pd.notna(row[3]) else mark
+                estimated_pallets = int(to_number(row[5]))
                 cartons = int(to_number(row[6]))
                 pieces = int(to_number(row[7]))
                 po_list = row[8]
@@ -148,15 +149,15 @@ def linkupreadexcel(path, cargo_id, filename):
 
 
                 info = (
-                    batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , remark
+                    batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , remark,estimated_pallets
                 )
 
                 insert_sql = """
                     INSERT INTO FBA_orders (
-                        batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , remark
+                        batch,cargo_id, shipment_id, mark,cartons,pieces,po_list, FBA_warehouse,  volume, weight , remark,estimated_pallets
                     ) VALUES (
                         %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s, %s,
+                        %s, %s, %s, %s, %s,%s,
                         %s
                     );
                 """

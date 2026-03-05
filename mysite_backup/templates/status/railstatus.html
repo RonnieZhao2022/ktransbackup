@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{terminal}}查询</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <style>
+
+
+            td, th {
+            /* 设置td,th宽度高度 */
+            border:1px solid gray;
+            width:auto;
+            height:auto;
+        }
+
+
+        td:first-child, th:first-child {
+            position:sticky;
+            left:0; /* 首行永远固定在左侧 */
+            z-index:1;
+            background-color:lightgrey;
+        }
+        thead tr th {
+            position:sticky;
+            top:0; /* 列首永远固定在头部  */
+            background-color:lightblue;
+        }
+        th:first-child{
+            z-index:2;
+            background-color:lightgrey;
+        }
+
+        /* 保证 text-truncate 生效 */
+        .text-truncate {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        /* 鼠标悬停显示 tooltip */
+        td[title] {
+            cursor: help;
+        }
+
+        /* 可选：自适应列宽 */
+        .table-responsive {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+        <div >
+            <table class="table" style="table-layout: fixed;font-size:15px;white-space:nowrap">
+
+                {%  if current_user.job_id in ['kathie','ronnie','david','tina','anna'] %}
+                    <caption class="caption-top">{{terminal}} cargo info, 我司所有员工总共有{{myresult|length}}票</caption>
+
+                {% else  %}
+                    <caption class="caption-top">{{terminal}} cargo info, 操作员{{current_user.job_id}}总共有{{myresult|length}}票</caption>
+
+
+                {%  endif %}
+
+                  <thead>
+                    <tr>
+                        <th scope="col"  style="background-color:lightblue">ID</th>
+                        <th scope="col"  style="background-color:lightblue">是否扣货</th>
+                        <th scope="col"  style="background-color:lightblue">{{terminal}}号 </th>
+                        <th scope="col"  style="background-color:lightblue">火车公司 </th>
+                        <th scope="col"  style="background-color:lightblue">抵达终端时间</th>
+                        <th scope="col"  style="background-color:lightblue">状态</th>
+                        <th scope="col"  style="background-color:lightblue">海关仓库</th>
+                        <th scope="col"  style="background-color:lightblue">目的地</th>
+                        <th scope="col"  style="background-color:lightblue">派送地址</th>
+                        <th scope="col"  style="background-color:lightblue">操作</th>
+                    </tr>
+                  </thead>
+
+
+                  <tbody >
+
+                  {%  for row in myresult %}
+
+                    <tr >
+
+
+
+                            <!-- 第1列 ID -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[0] }}">
+                                {{ row[0] }}
+                            </td>
+
+                            <!-- 第2列 是否扣货 -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[1] }}">
+                                {{ row[1] }}
+                            </td>
+
+                            <!-- 第3列 terminal号 -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[2] }}">
+                                {{ row[2] }}
+                            </td>
+
+                            <!-- 第4列 火车公司 -->
+                            <td class="text-truncate" title="{{ row[3] }}">
+                                {{ row[3] }}
+                            </td>
+
+                            <!-- 第5列 抵达终端时间 -->
+                            {% set value = row[4] %}
+
+                            {% if value is none or value|string == 'None' or (value|string).startswith('000') %}
+                                <td class="text-truncate" style="width: 200px;" title="">
+
+                                </td>
+                            {% else %}
+                                <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}"
+                                    title="{{ row[4] }}" style="width: 150px;">
+                                    {{ row[4] }}
+                                </td>
+                            {% endif %}
+
+
+
+                            <!-- 第6列 状态 -->
+                            <td class="text-truncate fw-bolder {% if row[5] == 'ON RAIL' %}bg-warning{% endif %}" title="{{ row[5] }}">
+                                {{ row[5] }}
+                            </td>
+
+                            <!-- 第7列 海关仓库，带链接 -->
+                            <td class="text-truncate" title="{{ row[6] }}">
+                                <a href="{{ row[7] }}" target="_blank">{{ row[6] }}</a>
+                            </td>
+
+                            <!-- 第8列 目的地 -->
+                            <td class="text-truncate" title="{{ row[7] }}">
+                                {{ row[8] }}
+                            </td>
+
+                            <!-- 第9列 派送地址，固定宽度150px -->
+                            <td class="text-truncate" style="width:200px;" title="{{ row[9] }}">
+                                {{ row[9] }}
+                            </td>
+
+
+
+
+
+
+                        <td><a href = "/change/{{row[0]}}/"   target="_blank">局部修改</a></td>
+
+
+                    </tr>
+                  {% endfor  %}
+
+                  </tbody>
+
+
+
+
+
+            </table>
+        </div>
+
+
+
+
+        <div class="container">
+            <h4 class = "my-3">{{terminal}}铁路货柜号列表</h4>
+            <!-- 用 textarea 显示传递的多行文本 -->
+            <textarea id="contentToCopy" cols = "30" rows ="10" readonly class = "mb-3">{{ text }}</textarea><br>
+            <button id="copyButton" class="btn btn-primary mb-3">一键复制</button>
+
+        </div>
+
+            <script >
+
+                document.getElementById('copyButton').addEventListener('click', function() {
+                    var content = document.getElementById('contentToCopy').value;
+
+                    // 使用 Clipboard API 进行复制
+                    navigator.clipboard.writeText(content).then(function() {
+
+                    }).catch(function(err) {
+                        alert('复制失败：' + err);
+                    });
+                });
+
+
+            </script>
+
+
+        <div  class="container mb-3">
+            {% if terminal  == 'CN'  %}
+
+                <a href="https://www.cn.ca/en/"  target="_blank">敬请登录{{terminal}}网站查询</a>
+
+
+            {% else %}
+
+                <a href="https://www.cpkcr.com/en"  target="_blank">敬请登录{{terminal}}网站查询</a>
+
+            {% endif %}
+
+        </div>
+        <hr>
+
+
+
+    </div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+</body>
+</html>

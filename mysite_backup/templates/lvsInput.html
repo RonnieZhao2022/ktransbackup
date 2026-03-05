@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVS信息录入系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<body>
+
+
+
+    <div class = "container p-2 mx-auto" >
+
+        <h3 class="text-conter">欢迎使用Ktrans  LVS信息录入系统</h3>
+
+    </div>
+
+
+
+
+<div class = "container"  >
+
+
+
+        <form method="post"  enctype="multipart/form-data">
+
+
+            <div class = "mb-3">
+
+                <h3 class = "text-primary m-5"><strong>请输入CC01信息</strong></h3>
+
+            </div>
+
+
+
+
+
+                     <div class = "mb-3">
+
+                    <label for="Client_Number" class="form-label">Client Number*(必填)Assigned number.</label>
+
+                    <input type="text"  class="form-control" required  id="Client_Number" name = "Client_Number"  placeholder = "请输入最多6位数字" pattern = "\d{0,6}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="MOT" class="form-label">MOT*(选填)Transportation Mode used to import the goods into Canada.  Mandatory for air shipments as 1.</label>
+
+                    <input type="text"  class="form-control"   id="MOT" name = "MOT"  placeholder = "请输入最多1位数字" pattern = "\d{0,1}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Port_of_Clearance" class="form-label">Port of Clearance*(必填)Customs Office Number where the goods are to be released.</label>
+
+                    <input type="text"  class="form-control" required  id="Port_of_Clearance" name = "Port_of_Clearance"  placeholder = "请输入最多3位数字" pattern = "\d{0,3}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Sublocation_Code" class="form-label">Sublocation Code*(必填)4 - digit identification number that identifies the location of the goods.</label>
+
+                    <input type="text"  class="form-control" required  id="Sublocation_Code" name = "Sublocation_Code"  placeholder = "请输入最多4位数字" pattern = "\d{0,4}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Port_of_Exit" class="form-label">Port of Exit*(选填)Mandatory for shipments exported from US.  Identifies the place where freight leaves the US.</label>
+
+                    <input type="text"  class="form-control"   id="Port_of_Exit" name = "Port_of_Exit"  placeholder = "请输入最多4位数字" pattern = "\d{0,4}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="PARS_Number" class="form-label">PARS Number*(必填)Unique number that identifies both the carrier and the shipment to CBSA.</label>
+
+                    <input type="text"  class="form-control" required  id="PARS_Number" name = "PARS_Number"  placeholder = "请输入最多25位字母或数字" pattern = "[0-9a-zA-Z]{0,25}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Number_of_Expected_Invoices" class="form-label">Number of Expected Invoices*(必填)Should always be 1 per consignee.</label>
+
+                    <input type="text"  class="form-control" required  id="Number_of_Expected_Invoices" name = "Number_of_Expected_Invoices"  placeholder = "请输入最多5位数字" pattern = "\d{0,5}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Total_Package_Quantity" class="form-label">Total Package Quantity*(必填)The number of packages contained per Shipment. </label>
+
+                    <input type="text"  class="form-control" required  id="Total_Package_Quantity" name = "Total_Package_Quantity"  placeholder = "请输入最多4位数字" pattern = "\d{0,4}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Package_Quantity_Unit_of_Measure_" class="form-label">Package Quantity Unit of Measure *(必填)A unit of measure for the number of packages. Eg. PCS</label>
+
+                    <input type="text"  class="form-control" required  id="Package_Quantity_Unit_of_Measure_" name = "Package_Quantity_Unit_of_Measure_"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+
+            <div class = "mb-3">
+
+                <h3 class = "text-primary m-5"><strong>请输入CC02信息</strong></h3>
+
+            </div>
+
+
+
+
+ <div class = "mb-3">
+
+                    <label for="CCI_Number" class="form-label">CCI Number*(必填)The assigned invoice number.</label>
+
+                    <input type="text"  class="form-control" required  id="CCI_Number" name = "CCI_Number"  placeholder = "请输入最多22位字母或数字" pattern = "[0-9a-zA-Z]{0,22}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Purchase_Order_Number" class="form-label">Purchase Order Number*(必填)The assigned Purchase Order number for the shipment unique from the CCI number.</label>
+
+                    <input type="text"  class="form-control" required  id="Purchase_Order_Number" name = "Purchase_Order_Number"  placeholder = "请输入最多22位字母或数字" pattern = "[0-9a-zA-Z]{0,22}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Shipment_Date" class="form-label">Shipment Date*(必填)The date of direct shipment to Canada.  YYYYMMDD</label>
+
+                    <input type="text"  class="form-control" required  id="Shipment_Date" name = "Shipment_Date"  placeholder = "请输入最多8位数字" pattern = "\d{0,8}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Invoice_Total_Amount" class="form-label">Invoice Total Amount*(必填)Total dollar value for the whole shipment. Two decimal places, transmit decimal.</label>
+
+                    <input type="text"  class="form-control" required  id="Invoice_Total_Amount" name = "Invoice_Total_Amount"  placeholder = "请输入最多12位数字" pattern = "[0-9\.]{0,12}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Invoice_Currency_Code" class="form-label">Invoice Currency Code*(必填)The currency code of the accompanying invoice amount. Eg. CAD, USD</label>
+
+                    <input type="text"  class="form-control" required  id="Invoice_Currency_Code" name = "Invoice_Currency_Code"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Other_References" class="form-label">Other References*(选填)A free text field to be used for other useful information, comments, etc.</label>
+
+                    <input type="text"  class="form-control"   id="Other_References" name = "Other_References"  placeholder = "请输入最多26位字母或数字" pattern = "[0-9a-zA-Z]{0,26}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="CCI_Package_Quantity" class="form-label">CCI Package Quantity*(选填)package count for CCI when there are multiple invoices per shipment.</label>
+
+                    <input type="text"  class="form-control"   id="CCI_Package_Quantity" name = "CCI_Package_Quantity"  placeholder = "请输入最多4位数字" pattern = "\d{0,4}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="CCI_Package_Quantity_Unit_of_Measure_" class="form-label">CCI Package Quantity Unit of Measure *(选填)package UOM for CCI when there are multiple invoices per shipment.</label>
+
+                    <input type="text"  class="form-control"   id="CCI_Package_Quantity_Unit_of_Measure_" name = "CCI_Package_Quantity_Unit_of_Measure_"  placeholder = "请输入最多3位字母或数字" pattern = "[0-9a-zA-Z]{0,3}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Net_Weight" class="form-label">Net Weight*(选填)net weight for invoice.</label>
+
+                    <input type="text"  class="form-control"   id="Net_Weight" name = "Net_Weight"  placeholder = "请输入最多8位数字" pattern = "\d{0,8}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Net_Weight_unit_of_measure" class="form-label">Net Weight unit of measure*(选填)net weight UOM for invoice. Eg. LBS, KGM</label>
+
+                    <input type="text"  class="form-control"   id="Net_Weight_unit_of_measure" name = "Net_Weight_unit_of_measure"  placeholder = "请输入最多3位字母或数字" pattern = "[0-9a-zA-Z]{0,3}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Gross_Weight_for_invoice" class="form-label">Gross Weight for invoice*(必填)gross weight for invoice.</label>
+
+                    <input type="text"  class="form-control" required  id="Gross_Weight_for_invoice" name = "Gross_Weight_for_invoice"  placeholder = "请输入最多8位数字" pattern = "[0-9\.]{0,8}"  maxlength="8">
+    </div>
+
+
+
+
+
+ <div class = "mb-3">
+
+                    <label for="Gross_Weight_unit_of_measure" class="form-label">Gross Weight unit of measure*(必填)gross weight UOM for invoice. Eg. LBS, KGM</label>
+
+                    <input type="text"  class="form-control" required  id="Gross_Weight_unit_of_measure" name = "Gross_Weight_unit_of_measure"  placeholder = "请输入最多3位字母或数字" pattern = "[0-9a-zA-Z]{0,3}" >
+    </div>
+
+
+
+    <div class = "mb-3">
+
+                <h3 class = "text-primary m-5"><strong>请输入CC03A信息</strong></h3>
+
+            </div>
+
+
+
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_Qualifier" class="form-label">Consignee Qualifier*(必填)Must be CN</label>
+
+                    <input type="text"  class="form-control" required  id="Consignee_Qualifier" name = "Consignee_Qualifier"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_Name" class="form-label">Consignee Name*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Consignee_Name" name = "Consignee_Name"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z\s]{0,35}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_Address" class="form-label">Consignee Address*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Consignee_Address" name = "Consignee_Address"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z\s]{0,35}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_City" class="form-label">Consignee City*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Consignee_City" name = "Consignee_City"  placeholder = "请输入最多25位字母" pattern = "[a-zA-Z\s]{0,25}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_Province_Terr" class="form-label">Consignee Province/Terr*(必填)ON,BC,SK,NB,NS,AB,MB,YT,NT,NL,NU,PE</label>
+
+                    <input type="text"  class="form-control" required  id="Consignee_Province_Terr" name = "Consignee_Province_Terr"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_Zip_Postal_Code" class="form-label">Consignee Zip/Postal Code*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Consignee_Zip_Postal_Code" name = "Consignee_Zip_Postal_Code"  placeholder = "请输入最多10位字母或数字" pattern = "[0-9a-zA-Z\s]{0,10}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_Country" class="form-label">Consignee Country*(必填)CA</label>
+
+                    <input type="text"  class="form-control" required  id="Consignee_Country" name = "Consignee_Country"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Consignee_Address_2" class="form-label">Consignee Address 2*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Consignee_Address_2" name = "Consignee_Address_2"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z\s]{0,35}" >
+    </div>
+
+
+
+    <div class = "mb-3">
+
+                <h3 class = "text-primary m-5"><strong>请输入CC03B信息</strong></h3>
+
+            </div>
+
+
+
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_Qualifier" class="form-label">Vendor Qualifier*(必填)Must be VN</label>
+
+                    <input type="text"  class="form-control" required  id="Vendor_Qualifier" name = "Vendor_Qualifier"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_Name" class="form-label">Vendor Name*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Vendor_Name" name = "Vendor_Name"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z\s]{0,35}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_Address" class="form-label">Vendor Address*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Vendor_Address" name = "Vendor_Address"  placeholder = "请输入最多35位字母或数字" pattern = ".{0,35}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_City" class="form-label">Vendor City*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Vendor_City" name = "Vendor_City"  placeholder = "请输入最多25位字母" pattern = "[a-zA-Z\s]{0,25}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_State" class="form-label">Vendor State*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Vendor_State" name = "Vendor_State"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_Zip_Postal_Code" class="form-label">Vendor Zip/Postal Code*(必填)</label>
+
+                    <input type="text"  class="form-control" required  id="Vendor_Zip_Postal_Code" name = "Vendor_Zip_Postal_Code"  placeholder = "请输入最多10位数字" pattern = "[0-9-]{0,10}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_Country" class="form-label">Vendor Country*(必填)eg. US</label>
+
+                    <input type="text"  class="form-control" required  id="Vendor_Country" name = "Vendor_Country"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Vendor_Address_2" class="form-label">Vendor Address 2*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Vendor_Address_2" name = "Vendor_Address_2"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z\s]{0,35}" >
+    </div>
+
+
+<div class = "mb-3">
+
+                <h3 class = "text-primary m-5"><strong>HS Code相关录入</strong></h3>
+
+            </div>
+
+
+
+            <div class = "mb-3">
+
+                    <label for="Item_Quantity_" class="form-label">Item Quantity *(必填)Line item quantity.  </label>
+
+                    <input type="text"  class="form-control" required  id="Item_Quantity_" name = "Item_Quantity_"  placeholder = "请输入最多9位数字" pattern = "\d{0,9}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Item_Quantity_Unit_of_Measure" class="form-label">Item Quantity Unit of Measure*(必填)Line Item quantity unit of measure.  Eg. PCS, NMB</label>
+
+                    <input type="text"  class="form-control" required  id="Item_Quantity_Unit_of_Measure" name = "Item_Quantity_Unit_of_Measure"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Unit_Price" class="form-label">Unit Price*(必填)Unit price for line item.</label>
+
+                    <input type="text"  class="form-control" required  id="Unit_Price" name = "Unit_Price"  placeholder = "请输入最多14位数字" pattern = "[0-9\.]{0,14}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Country_of_Origin" class="form-label">Country of Origin*(必填)Origin code of line item. Eg. UFL, IT, MX</label>
+
+                    <input type="text"  class="form-control" required  id="Country_of_Origin" name = "Country_of_Origin"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Number" class="form-label">Part Number*(必填)Unique line item identifier.</label>
+
+                    <input type="text"  class="form-control" required  id="Part_Number" name = "Part_Number"  placeholder = "请输入最多25位字母或数字" pattern = "[0-9a-zA-Z]{0,25}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Description_1" class="form-label">Part Description 1*(必填)Goods description of line item being shipped.</label>
+
+                    <input type="text"  class="form-control" required  id="Part_Description_1" name = "Part_Description_1"  placeholder = "请输入最多30位字母或数字" pattern = "[0-9a-zA-Z()\s]{0,30}" maxlength="30">
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Description_2" class="form-label">Part Description 2*(选填)Additional description of line item.</label>
+
+                    <input type="text"  class="form-control"   id="Part_Description_2" name = "Part_Description_2"  placeholder = "请输入最多30位字母或数字" pattern = "[0-9a-zA-Z()\s]{0,30}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Part_Description_3" class="form-label">Part Description 3*(选填)Additional description of line item.</label>
+
+                    <input type="text"  class="form-control"   id="Part_Description_3" name = "Part_Description_3"  placeholder = "请输入最多20位字母或数字" pattern = "[0-9a-zA-Z()\s]{0,30}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="HS_Classification_Number_for_Line_Item" class="form-label">HS Classification Number for Line Item*(必填)10 - digit Canadian Harmonized System Classification Number.</label>
+
+                    <input type="text"  class="form-control" required  id="HS_Classification_Number_for_Line_Item" name = "HS_Classification_Number_for_Line_Item"  placeholder = "请输入最多10位数字" pattern = "\d{0,10}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Tariff_Qty" class="form-label">Tariff Qty*(选填)Tariff quantity from Customs Tariff.</label>
+
+                    <input type="text"  class="form-control"   id="Tariff_Qty" name = "Tariff_Qty"  placeholder = "请输入最多14位数字" pattern = "\d{0,14}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Tariff_UOM" class="form-label">Tariff UOM*(选填)Tariff unit of measure from Customs Tariff.</label>
+
+                    <input type="text"  class="form-control"   id="Tariff_UOM" name = "Tariff_UOM"  placeholder = "请输入最多3位字母" pattern = "[a-zA-Z]{0,3}" >
+    </div>
+
+ <div class = "mb-3">
+
+                    <label for="Extended_Price" class="form-label">Extended Price*(选填)Total value of line item.</label>
+
+                    <input type="text"  class="form-control"   id="Extended_Price" name = "Extended_Price"  placeholder = "请输入最多14位数字" pattern = "[0-9\.]{0,14}" >
+    </div>
+
+
+
+
+<!--
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_Qualifier" class="form-label">Exporter Qualifier*(选填)**Mandatory if different than Vendor.  Must be EX</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_Qualifier" name = "Exporter_Qualifier"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_Name" class="form-label">Exporter Name*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_Name" name = "Exporter_Name"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z]{0,35}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_Address" class="form-label">Exporter Address*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_Address" name = "Exporter_Address"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z]{0,35}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_City" class="form-label">Exporter City*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_City" name = "Exporter_City"  placeholder = "请输入最多25位字母" pattern = "[a-zA-Z\s]{0,25}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_State" class="form-label">Exporter State*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_State" name = "Exporter_State"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_Zip_Postal_Code" class="form-label">Exporter Zip/Postal Code*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_Zip_Postal_Code" name = "Exporter_Zip_Postal_Code"  placeholder = "请输入最多10位数字" pattern = "\d{0,10}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_Country" class="form-label">Exporter Country*(选填)eg. US</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_Country" name = "Exporter_Country"  placeholder = "请输入最多2位字母" pattern = "[a-zA-Z]{0,2}" >
+    </div>
+
+
+ <div class = "mb-3">
+
+                    <label for="Exporter_Address_2" class="form-label">Exporter Address 2*(选填)</label>
+
+                    <input type="text"  class="form-control"   id="Exporter_Address_2" name = "Exporter_Address_2"  placeholder = "请输入最多35位字母或数字" pattern = "[0-9a-zA-Z]{0,35}" >
+    </div>  -->
+
+
+<div class = "mb-3">
+
+                <h3 class = "text-primary m-5"><strong>*上述信息查验无误之后即可点击提交，提交后将会进入文件预览和下载页面，如有其他HS code条目新增也将出现在新页面内。*</strong></h3>
+
+            </div>
+
+
+
+
+
+
+                <button type="submit" class="btn btn-primary">提交或增添HSCode</button>
+
+                <button   class="btn btn-primary"><a href="/lvsInput/add/" style = "text-decoration: none; color : #fff">在此票中添加新单</a></button>
+
+
+
+
+        </form>
+
+</div>
+
+
+</body>
+</html>

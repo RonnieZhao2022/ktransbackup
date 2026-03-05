@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>重要通知添加项目</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<body>
+
+    {% for message in get_flashed_messages() %}
+            <div class="container alert "><h2>{{ message }}</h2></div>
+    {% endfor %}
+
+    <div class = "container p-2 mx-auto" >
+
+        <h3 class="text-conter">重要通知添加项目</h3>
+
+    </div>
+
+
+
+
+<div class = "container"  >
+
+
+
+        <form method="post"  enctype="multipart/form-data">
+
+                <div class="form-row ">
+                    <!--标注是否扣货  -->
+                    <div class="form-group col-md-3">
+                          <label for="sender" class="form-label">通知发送人</label>
+                          <select id="sender" name = "sender" class="form-control">
+                                <option selected>Kathie</option>
+                                <option >Tina</option>
+                                <option >Anna</option>
+                                <option >Gavin</option>
+
+                          </select>
+                    </div>
+
+
+                    <!--消息标题  -->
+                    <div class="form-group col-md-9">
+                        <label for="subtitle" class="form-label">消息标题</label>
+                        <input type="text" class="form-control" id="subtitle" name = "subtitle" placeholder = "请输入消息标题，必填，不能为空！！！" >
+                    </div>
+
+                </div>
+
+
+
+                    <!--消息内容  -->
+                    <div class="form-group">
+                        <label for="content" class="form-label">消息内容</label>
+                        <textarea class="form-control" id="content" name = "content"  rows="3"   placeholder = "请输入消息标题，必填，不能为空！！！"></textarea>
+                    </div>
+
+
+
+            {% if current_user.id== "Ronnie" %}
+
+                <div class="form-row" >
+                    <button type="submit" class="btn btn-primary">提交</button>
+                </div>
+
+            {% else %}
+
+                <div class="form-row" >
+                    <h3 class = "bg-primary text-white mt-3">很抱歉，您需要管理员权限才可以修改相关信息！</h3>
+                </div>
+
+
+            {% endif  %}
+
+
+
+        </form>
+
+
+</body>
+</html>

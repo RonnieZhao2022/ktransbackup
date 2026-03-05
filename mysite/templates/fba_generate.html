@@ -5,6 +5,11 @@
 <title>FBA 入仓管理</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .action-btns button {
+        margin-right: 2px;
+    }
+</style>
 </head>
 <body class="bg-light">
 
@@ -13,26 +18,71 @@
 
 <form method="POST">
 
-<!-- 入仓时间输入和提交按钮 -->
-<div class="mb-3">
-    <div class="row align-items-end">
-        <div class="col-md-3">
-            <label class="form-label">入仓时间</label>
-            <input type="date" name="inbound_date" class="form-control" required>
-        </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary mt-2">
-                批量更新选中货物
-            </button>
+<div class="row align-items-end">
+
+    <!-- 日期输入 -->
+    <div class="col-md-3">
+        <label class="form-label">日期时间</label>
+        <input type="datetime-local"
+               name="selected_datetime"
+               class="form-control">
+    </div>
+
+    <!-- 三个单选按钮 -->
+    <div class="col-md-5">
+        <label class="form-label d-block">批量更新项：</label>
+
+        <div class="d-flex gap-4">
+
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="radio"
+                       name="update_type"
+                       value="booking">
+                <label class="form-check-label">订仓日期</label>
+            </div>
+
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="radio"
+                       name="update_type"
+                       value="inbound">
+                <label class="form-check-label">入仓日期</label>
+            </div>
+
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="radio"
+                       name="update_type"
+                       value="pallets"
+                       checked>
+                <label class="form-check-label">更新板数</label>
+            </div>
+
+            <div class="col-md-3">
+                <button type="button" class="btn btn-success btn-sm" onclick="exportExcel()">
+                    生成Excel
+                </button>
+            </div>
+
         </div>
     </div>
+
+    <!-- 提交 -->
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">
+            批量更新选中货物
+        </button>
+    </div>
+
+
 </div>
 
 <!-- 仓库分页标签 -->
 <ul class="nav nav-tabs mb-3" id="warehouseTabs">
 {% for warehouse in warehouse_data.keys() %}
 <li class="nav-item">
-    <button class="nav-link {% if loop.first %}active{% endif %}"
+    <button type="button" class="nav-link {% if loop.first %}active{% endif %}"
             data-bs-toggle="tab"
             data-bs-target="#tab{{ loop.index }}">
         {{ warehouse }}
@@ -75,15 +125,18 @@
         <thead class="table-light">
         <tr>
             <th style="width:40px;"></th>
-            <th>Shipment</th>
-            <th>Mark</th>
-            <th>板</th>
-            <th>箱</th>
-            <th>件</th>
-            <th>PO</th>
-            <th>状态</th>
-            <th>Book</th>
-            <th>送仓</th>
+            <th style="width:150px;">Shipment</th>
+            <th style="width:200px;">Mark</th>
+            <th style="width:50px;">预计</th>
+            <th style="width:80px;">实际板数</th>
+            <th style="width:80px;">箱</th>
+            <th style="width:80px;">件</th>
+            <th style="width:150px;">PO</th>
+            <th style="width:100px;">状态</th>
+            <th style="width:120px;">预约时间</th>
+            <th style="width:120px;">送仓时间</th>
+            <th style="width:550px;">备注</th>
+            <th>操作</th>
         </tr>
         </thead>
         <tbody>
@@ -93,11 +146,20 @@
                 <input type="checkbox"
                        class="cargo-checkbox group{{ cargo.group_id }} warehouse{{ loop.parentloop_index|default(loop.index0) }}"
                        name="selected_items"
-                       value="{{ row.shipment_id }}">
+                       value="{{ row.id }}"
+                       data-cargo="{{ cargo.cargo_id }}">
             </td>
             <td>{{ row.shipment_id }}</td>
             <td>{{ row.mark }}</td>
-            <td>{{ row.pallets }}</td>
+            <td>{{ row.estimated_pallets }}</td>
+            <td>
+                <input type="number"
+                       name="pallets_{{ row.id }}"
+                       class="form-control"
+                       value="{{ row.pallets or '' }}"
+                       step="0.5"
+                       min="0">
+            </td>
             <td>{{ row.cartons }}</td>
             <td>{{ row.pieces }}</td>
             <td>{{ row.po_list }}</td>
@@ -106,8 +168,17 @@
                     {{ row.status }}
                 </span>
             </td>
-            <td>{{ row.book_date }}</td>
-            <td>{{ row.inbound_date or '' }}</td>
+            <td  class="table-warning text-center fw-bold">{{ row.book_date or '' }}</td>
+            <td  class="table-warning text-center fw-bold">{{ row.inbound_date or '' }}</td>
+            <td>{{ row.remark}}</td>
+            <td class="action-btns">
+                <!-- 复制按钮可用 -->
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyRow(this)">复制</button>
+                <!-- 初始行删除按钮不可用 -->
+                <button type="button" class="btn btn-sm btn-outline-danger" disabled style="opacity:0.5; cursor:not-allowed;">
+                    删除
+                </button>
+            </td>
         </tr>
         {% endfor %}
         </tbody>
@@ -123,6 +194,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
 // 全选本票
@@ -137,6 +209,136 @@ function toggleWarehouse(warehouseClass){
     let checkboxes = document.querySelectorAll("."+warehouseClass);
     let allChecked = Array.from(checkboxes).every(cb => cb.checked);
     checkboxes.forEach(cb => cb.checked = !allChecked);
+}
+
+// 复制行
+function copyRow(btn){
+    const tr = btn.closest('tr');
+    const clone = tr.cloneNode(true);
+
+    // 标记为复制行
+    clone.classList.add('copied-row');
+
+    // 清空入仓日期
+    clone.cells[9].textContent = '';
+
+    // 取消 checkbox 选中
+    const checkboxes = clone.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+
+    // 保留板数可修改，name 随机化
+    const palletInput = clone.querySelector('input[type="number"]');
+    const randomId = Math.floor(Math.random() * 1000000);
+    palletInput.name = `pallets_${randomId}`;
+
+    // 删除按钮可用
+    const deleteBtn = clone.querySelector('button.btn-outline-danger');
+    deleteBtn.disabled = false;
+    deleteBtn.style.opacity = 1;
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.onclick = function(){ clone.remove(); };
+
+    // 插入到当前行后
+    tr.after(clone);
+}
+
+// tab 状态记忆
+document.addEventListener('DOMContentLoaded', function() {
+    let lastTab = localStorage.getItem('activeWarehouseTab');
+    if (lastTab) {
+        let tabEl = document.querySelector(`#warehouseTabs button[data-bs-target="${lastTab}"]`);
+        if(tabEl){
+            let tab = new bootstrap.Tab(tabEl);
+            tab.show();
+        }
+    }
+
+    // 点击 tab 时保存到 localStorage
+    document.querySelectorAll('#warehouseTabs button').forEach(btn => {
+        btn.addEventListener('shown.bs.tab', function(event){
+            localStorage.setItem('activeWarehouseTab', event.target.dataset.bsTarget);
+        });
+    });
+});
+</script>
+
+<script>
+document.querySelector("form").addEventListener("submit", function(e) {
+
+    const booking = document.getElementById("bookingCheck").checked;
+    const inbound = document.getElementById("inboundCheck").checked;
+    const pallets = document.getElementById("palletCheck").checked;
+
+    const datetime = document.querySelector("input[name='selected_datetime']").value;
+
+    // 至少选一个
+    if (!booking && !inbound && !pallets) {
+        alert("请至少选择一个更新项");
+        e.preventDefault();
+        return;
+    }
+
+    // 选了日期类必须填时间
+    if ((booking || inbound) && !datetime) {
+        alert("请选择日期时间");
+        e.preventDefault();
+        return;
+    }
+
+});
+
+
+function exportExcel(){
+
+    const rows = [];
+
+    rows.push([
+        "ARN",
+        "PRO",
+        "BOL List (use , as separator)",
+        "Vendor Name",
+        "Pallet Count",
+        "Carton Count",
+        "Unit Count",
+        "PO List (use , as separator)"
+    ]);
+
+    document.querySelectorAll("input[name='selected_items']:checked").forEach(cb => {
+
+        const tr = cb.closest("tr");
+        const cargo_id = cb.dataset.cargo;
+
+        const mark = tr.cells[2].innerText.trim();
+        const pallets = tr.querySelector("input[type='number']").value || "";
+        const cartons = tr.cells[5].innerText.trim();
+        const po = tr.cells[7].innerText.trim();
+
+        rows.push([
+            "",
+            mark,
+            cargo_id,
+            "",
+            pallets,
+            cartons,
+            "",
+            po
+        ]);
+
+    });
+
+    if(rows.length === 1){
+        alert("请先选择记录");
+        return;
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "FBA");
+
+    let today = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `FBA_${today}.xlsx`);
+
 }
 </script>
 
